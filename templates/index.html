@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SFA Lead Generator</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px; }
+        textarea { width: 100%; height: 150px; }
+    </style>
+</head>
+<body>
+<h1>SFA Lead Generator</h1>
+<form id="upload-form" method="post" enctype="multipart/form-data">
+    <label>Paste CSV Data:</label><br>
+    <textarea name="csv_text"></textarea><br>
+    <label>Or Upload CSV File:</label>
+    <input type="file" name="csv_file" accept=".csv"><br>
+    <button type="submit">Load Data</button>
+</form>
+
+<div id="table-container"></div>
+
+<div id="process-section" style="display:none;">
+    <label>Prompt (use column names in {braces}):</label><br>
+    <input type="text" id="prompt" style="width:100%;" placeholder="e.g. Summarize {name}"><br>
+    <button id="process-btn">Process with ChatGPT</button>
+</div>
+
+<script>
+$('#upload-form').on('submit', function(e){
+    e.preventDefault();
+    var formData = new FormData(this);
+    $.ajax({
+        url: '/upload',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(data){
+            renderTable(JSON.parse(data));
+            $('#process-section').show();
+        },
+        error: function(xhr){ alert(xhr.responseText); }
+    });
+});
+
+function renderTable(data){
+    if(!data.length){ $('#table-container').html('No rows'); return; }
+    var html = '<table><thead><tr>';
+    Object.keys(data[0]).forEach(function(col){ html += '<th>'+col+'</th>'; });
+    html += '</tr></thead><tbody>';
+    data.forEach(function(row){
+        html += '<tr>';
+        Object.values(row).forEach(function(val){ html += '<td>'+val+'</td>'; });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    $('#table-container').html(html);
+}
+
+$('#process-btn').on('click', function(){
+    var prompt = $('#prompt').val();
+    $.ajax({
+        url: '/process',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({prompt: prompt}),
+        success: function(data){
+            renderTable(JSON.parse(data));
+        },
+        error: function(xhr){ alert(xhr.responseText); }
+    });
+});
+</script>
+</body>
+</html>
