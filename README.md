@@ -1,3 +1,12 @@
+source venv/bin/activate
+source .env
+flask run --debug
+
+
+## TODO: -> 
+Make this cleaner like using make (eventually)
+
+
 # SFA Lead Generator
 
 This project provides a lightweight web interface for uploading or pasting CSV data and processing each row through the ChatGPT API. It is useful for quick lead generation or analytics workflows that require simple batch processing.

@@ -1,0 +1,37 @@
+# Bytecode and Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/           # sometimes virtualenvs use this name
+.venv/
+
+# Flask and dotenv configuration
+.env            # contains secrets like API keys
+.flaskenv       # optional, but usually local-only config
+
+# VSCode or IDE-specific
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Jupyter (if used)
+.ipynb_checkpoints/
+
+# Compiled C files or extensions
+*.so
+
+# Distribution artifacts
+build/
+dist/
+*.egg-info/

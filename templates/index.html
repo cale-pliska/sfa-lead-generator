@@ -68,7 +68,8 @@ $('#process-btn').on('click', function(){
         contentType: 'application/json',
         data: JSON.stringify({prompt: prompt}),
         success: function(data){
-            renderTable(JSON.parse(data));
+            console.log("Raw data from backend:", data);
+            renderTable(data);
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
