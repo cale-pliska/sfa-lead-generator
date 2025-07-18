@@ -18,18 +18,12 @@ def index():
 @bp.route('/upload', methods=['POST'])
 def upload():
     global DATAFRAME
-    csv_text = ''
+    tsv_text = request.form.get('tsv_text', '').strip()
+    if not tsv_text:
+        return 'No TSV data provided', 400
 
-    if 'csv_file' in request.files and request.files['csv_file']:
-        file = request.files['csv_file']
-        csv_text = file.read().decode('utf-8')
-    elif 'csv_text' in request.form and request.form['csv_text'].strip():
-        csv_text = request.form['csv_text']
-    else:
-        return 'No CSV data provided', 400
-
-    f = io.StringIO(csv_text)
-    DATAFRAME = pd.read_csv(f)
+    f = io.StringIO(tsv_text)
+    DATAFRAME = pd.read_csv(f, sep='\t', index_col=None)
     return DATAFRAME.to_json(orient='records')
 
 
