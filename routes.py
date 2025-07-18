@@ -2,7 +2,7 @@ import io
 import pandas as pd
 from flask import Blueprint, render_template, request, jsonify
 
-from processing import apply_prompt_to_dataframe
+from processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
 bp = Blueprint('main', __name__)
 
@@ -33,4 +33,20 @@ def process():
     prompt = request.json.get('prompt', '')
     results = apply_prompt_to_dataframe(DATAFRAME, prompt)
     return jsonify(results)
+
+
+@bp.route('/process_single', methods=['POST'])
+def process_single():
+    """Process a single row of the loaded data."""
+    global DATAFRAME
+    prompt = request.json.get('prompt', '')
+    row_index = int(request.json.get('row_index', 0))
+    if DATAFRAME is None or row_index < 0 or row_index >= len(DATAFRAME):
+        return 'Invalid row index', 400
+
+    row = DATAFRAME.iloc[row_index]
+    result = apply_prompt_to_row(row, prompt)
+    new_row = row.to_dict()
+    new_row['result'] = result
+    return jsonify(new_row)
 

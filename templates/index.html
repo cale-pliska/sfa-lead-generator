@@ -23,7 +23,10 @@
 <div id="process-section" style="display:none;">
     <label>Prompt (use column names in {braces}):</label><br>
     <input type="text" id="prompt" style="width:100%;" placeholder="e.g. Summarize {name}"><br>
-    <button id="process-btn">Process with ChatGPT</button>
+    <label>Row index for single run:</label>
+    <input type="number" id="row-index" value="0" min="0"><br>
+    <button id="process-single-btn">Process Single Row</button>
+    <button id="process-btn">Process All Rows</button>
 </div>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
