@@ -1,22 +1,21 @@
 import os
 import pandas as pd
-import openai
 
+from openai import OpenAI
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+# Create a reusable OpenAI client instance
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _call_openai(message: str) -> str:
     """Return completion for the given message or placeholder text."""
-    if not openai.api_key:
+    if not client.api_key:
         return f"[placeholder] {message}"
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": message}],
     )
-    return response.choices[0].message.get("content", "").strip()
-
+    return response.choices[0].message.content.strip()
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:
     try:
