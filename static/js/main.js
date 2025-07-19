@@ -44,3 +44,18 @@ $('#process-btn').on('click', function(){
     });
 });
 
+$('#process-single-btn').on('click', function(){
+    var prompt = $('#prompt').val();
+    var rowIndex = parseInt($('#row-index').val()) || 0;
+    $.ajax({
+        url: '/process_single',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({prompt: prompt, row_index: rowIndex}),
+        success: function(data){
+            alert('Result: ' + data.result);
+        },
+        error: function(xhr){ alert(xhr.responseText); }
+    });
+});
+
