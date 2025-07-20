@@ -1,3 +1,16 @@
+function loadSavedSetup(){
+    $('#saved-tsv').val(localStorage.getItem('saved_tsv') || '');
+    $('#saved-instructions').val(localStorage.getItem('saved_instructions') || '');
+    $('#saved-prompt').val(localStorage.getItem('saved_prompt') || '');
+    if($('#saved-tsv').val() || $('#saved-instructions').val() || $('#saved-prompt').val()){
+        $('#past-section').show();
+    }
+}
+
+$(document).ready(function(){
+    loadSavedSetup();
+});
+
 $('#upload-form').on('submit', function(e){
     e.preventDefault();
     var formData = new FormData(this);
@@ -13,6 +26,25 @@ $('#upload-form').on('submit', function(e){
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
+});
+
+$('#save-setup-btn').on('click', function(){
+    localStorage.setItem('saved_tsv', $('#tsv-input').val());
+    localStorage.setItem('saved_instructions', $('#instructions').val());
+    localStorage.setItem('saved_prompt', $('#prompt').val());
+    loadSavedSetup();
+});
+
+$('#load-setup-btn').on('click', function(){
+    $('#tsv-input').val($('#saved-tsv').val());
+    $('#instructions').val($('#saved-instructions').val());
+    $('#prompt').val($('#saved-prompt').val());
+});
+
+$('#saved-tsv, #saved-instructions, #saved-prompt').on('change', function(){
+    localStorage.setItem('saved_tsv', $('#saved-tsv').val());
+    localStorage.setItem('saved_instructions', $('#saved-instructions').val());
+    localStorage.setItem('saved_prompt', $('#saved-prompt').val());
 });
 
 function renderTable(data){
@@ -55,9 +87,22 @@ $('#process-single-btn').on('click', function(){
         contentType: 'application/json',
         data: JSON.stringify({prompt: prompt, instructions: instructions, row_index: rowIndex}),
         success: function(data){
-            alert('Result: ' + data.result);
+            var $table = $('#table-container table');
+            if($table.length){
+                var $rows = $table.find('tbody tr');
+                if($table.find('th.result-column').length === 0){
+                    $table.find('thead tr').append('<th class="result-column">result</th>');
+                    $rows.each(function(){ $(this).append('<td></td>'); });
+                }
+                if(rowIndex < $rows.length){
+                    $rows.eq(rowIndex).find('td').last().text(data.result);
+                }
+            } else {
+                alert('Result: ' + data.result);
+            }
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
 });
+
 

@@ -14,9 +14,21 @@
 <h1>SFA Lead Generator</h1>
 <form id="upload-form" method="post" enctype="multipart/form-data">
     <label>Paste TSV Data:</label><br>
-    <textarea name="tsv_text"></textarea><br>
+    <textarea name="tsv_text" id="tsv-input"></textarea><br>
     <button type="submit">Load Data</button>
+    <button type="button" id="save-setup-btn">Save Setup</button>
 </form>
+
+<div id="past-section" style="display:none; margin-top:1em;">
+    <h3>Saved Setup</h3>
+    <label>TSV Input:</label><br>
+    <textarea id="saved-tsv"></textarea><br>
+    <label>Instructions:</label><br>
+    <textarea id="saved-instructions" style="height:80px;"></textarea><br>
+    <label>Prompt:</label><br>
+    <input type="text" id="saved-prompt" style="width:100%;"><br>
+    <button type="button" id="load-setup-btn">Load Saved Setup</button>
+</div>
 
 <div id="table-container"></div>
 
