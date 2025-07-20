@@ -43,6 +43,7 @@ def process_single():
     prompt = request.json.get('prompt', '')
     instructions = request.json.get('instructions', '')
     row_index = int(request.json.get('row_index', 0))
+    print(prompt, row_index)
     if DATAFRAME is None or row_index < 0 or row_index >= len(DATAFRAME):
         return 'Invalid row index', 400
 
