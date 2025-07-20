@@ -8,7 +8,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def _call_openai(instructions: str, message: str) -> str:
-    """Return completion for the given message or placeholder text."""
+    """Return completion for the given message using gpt-4o-search-preview, or placeholder text."""
     if not client.api_key:
         return f"[placeholder] {message}"
 
@@ -17,11 +17,16 @@ def _call_openai(instructions: str, message: str) -> str:
         messages.append({"role": "system", "content": instructions})
     messages.append({"role": "user", "content": message})
 
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-search-preview",
+            web_search_options={},  # empty = search allowed but optional
+            messages=messages,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"[error] {str(e)}"
+
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:
     try:
@@ -44,4 +49,3 @@ def apply_prompt_to_row(row: pd.Series, instructions: str, prompt: str) -> str:
     """Process a single row using the given prompt."""
     message = _format_prompt(prompt, row)
     return _call_openai(instructions, message)
-
