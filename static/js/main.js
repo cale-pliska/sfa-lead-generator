@@ -31,11 +31,12 @@ function renderTable(data){
 
 $('#process-btn').on('click', function(){
     var prompt = $('#prompt').val();
+    var instructions = $('#instructions').val();
     $.ajax({
         url: '/process',
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({prompt: prompt}),
+        data: JSON.stringify({prompt: prompt, instructions: instructions}),
         success: function(data){
             console.log("Raw data from backend:", data);
             renderTable(data);
@@ -46,12 +47,13 @@ $('#process-btn').on('click', function(){
 
 $('#process-single-btn').on('click', function(){
     var prompt = $('#prompt').val();
+    var instructions = $('#instructions').val();
     var rowIndex = parseInt($('#row-index').val()) || 0;
     $.ajax({
         url: '/process_single',
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({prompt: prompt, row_index: rowIndex}),
+        data: JSON.stringify({prompt: prompt, instructions: instructions, row_index: rowIndex}),
         success: function(data){
             alert('Result: ' + data.result);
         },
