@@ -7,15 +7,21 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _call_openai(message: str) -> str:
-    """Return completion for the given message or placeholder text."""
+    """Return completion for the given message using gpt-4o-search-preview, or placeholder text."""
     if not client.api_key:
         return f"[placeholder] {message}"
 
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": message}],
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-search-preview",
+            web_search_options={},  # empty = search allowed but optional
+            messages=[
+                {"role": "user", "content": message}
+            ],
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"[error] {str(e)}"
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:
     try:
