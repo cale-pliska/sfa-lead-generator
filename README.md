@@ -15,7 +15,7 @@ This project provides a lightweight web interface for pasting tab separated valu
 
 - Paste TSV text directly into the page.
 - View the data in an editable HTML table.
-- Enter a custom prompt that can reference columns using `{column}` syntax.
+- Enter global **Instructions** for GPT and a custom prompt that can reference columns using `{column}` syntax.
 - Batch process each row via the ChatGPT API and display the results.
 
 ## Requirements
@@ -42,6 +42,7 @@ The server will start on `http://localhost:5000`.
 
 1. Open the page in your browser.
 2. Paste your TSV data and click **Load Data**.
-3. Provide a prompt like `Generate a short summary for {name}`.
-4. Optionally specify a row index and click **Process Single Row** to test your prompt on one row.
-5. Click **Process All Rows** to run the prompt on the entire dataset. A new `result` column will appear with the output from ChatGPT.
+3. Enter any system-wide **Instructions** describing how GPT should respond.
+4. Provide a prompt like `Generate a short summary for {name}`.
+5. Optionally specify a row index and click **Process Single Row** to test your prompt on one row.
+6. Click **Process All Rows** to run the prompt on the entire dataset. A new `result` column will appear with the output from ChatGPT.

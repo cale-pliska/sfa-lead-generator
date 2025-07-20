@@ -31,7 +31,8 @@ def upload():
 def process():
     global DATAFRAME
     prompt = request.json.get('prompt', '')
-    results = apply_prompt_to_dataframe(DATAFRAME, prompt)
+    instructions = request.json.get('instructions', '')
+    results = apply_prompt_to_dataframe(DATAFRAME, instructions, prompt)
     return jsonify(results)
 
 
@@ -40,13 +41,14 @@ def process_single():
     """Process a single row of the loaded data."""
     global DATAFRAME
     prompt = request.json.get('prompt', '')
+    instructions = request.json.get('instructions', '')
     row_index = int(request.json.get('row_index', 0))
     print(prompt, row_index)
     if DATAFRAME is None or row_index < 0 or row_index >= len(DATAFRAME):
         return 'Invalid row index', 400
 
     row = DATAFRAME.iloc[row_index]
-    result = apply_prompt_to_row(row, prompt)
+    result = apply_prompt_to_row(row, instructions, prompt)
     new_row = row.to_dict()
     new_row['result'] = result
     return jsonify(new_row)
