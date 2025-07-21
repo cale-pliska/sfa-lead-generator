@@ -46,3 +46,15 @@ The server will start on `http://localhost:5000`.
 4. Provide a prompt like `Generate a short summary for {name}`.
 5. Optionally specify a row index and click **Process Single Row** to test your prompt on one row.
 6. Click **Process All Rows** to run the prompt on the entire dataset. A new `result` column will appear with the output from ChatGPT.
+
+## Contact Pipeline
+
+The script `contact_manager.py` generates and stores contact details for business names using the OpenAI API. Each time you run it with new businesses, they are appended to `contacts.csv`.
+
+Example:
+
+```bash
+python contact_manager.py "Acme Corp" "Contoso" 
+```
+
+This command outputs the updated **CONTACTS** table and saves it to `contacts.csv`.
