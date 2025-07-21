@@ -17,6 +17,7 @@ This project provides a lightweight web interface for pasting tab separated valu
 - View the data in an editable HTML table.
 - Enter global **Instructions** for GPT and a custom prompt that can reference columns using `{column}` syntax.
 - Batch process each row via the ChatGPT API and display the results.
+- Manage and append contact details for businesses via the `/contacts` page.
 
 ## Requirements
 
@@ -58,3 +59,6 @@ python contact_manager.py "Acme Corp" "Contoso"
 ```
 
 This command outputs the updated **CONTACTS** table and saves it to `contacts.csv`.
+
+You can also manage contacts through the web interface. Visit `/contacts` while the
+Flask app is running to add new businesses and view the current contacts table.

@@ -2,6 +2,8 @@ import io
 import pandas as pd
 from flask import Blueprint, render_template, request, jsonify
 
+from contact_manager import load_contacts, add_contacts as _add_contacts
+
 from processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
 bp = Blueprint('main', __name__)
@@ -52,4 +54,26 @@ def process_single():
     new_row = row.to_dict()
     new_row['result'] = result
     return jsonify(new_row)
+
+
+@bp.route('/contacts')
+def contacts_page():
+    df = load_contacts()
+    return render_template('contacts.html', contacts=df.to_dict(orient='records'))
+
+
+@bp.route('/contacts_data')
+def contacts_data():
+    df = load_contacts()
+    return df.to_json(orient='records')
+
+
+@bp.route('/add_contacts', methods=['POST'])
+def add_contacts_route():
+    data = request.get_json(silent=True) or {}
+    businesses = data.get('businesses', [])
+    if not isinstance(businesses, list):
+        return 'Invalid payload', 400
+    df = _add_contacts(businesses)
+    return df.to_json(orient='records')
 

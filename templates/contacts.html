@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contacts</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px; }
+        textarea { width: 100%; height: 80px; }
+    </style>
+</head>
+<body>
+<h1>Contacts</h1>
+<p><a href="{{ url_for('main.index') }}">Back to Main</a></p>
+<form id="add-form">
+    <label>Business names (one per line):</label><br>
+    <textarea id="businesses"></textarea><br>
+    <button type="submit">Add Contacts</button>
+</form>
+<div id="table-container"></div>
+<script src="{{ url_for('static', filename='js/contacts.js') }}"></script>
+</body>
+</html>
