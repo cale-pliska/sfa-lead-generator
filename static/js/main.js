@@ -22,7 +22,6 @@ $('#upload-form').on('submit', function(e){
         contentType: false,
         success: function(data){
             renderDataTable(JSON.parse(data));
-            $('#step2').show();
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
