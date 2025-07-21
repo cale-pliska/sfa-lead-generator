@@ -1,14 +1,46 @@
 function loadSavedSetup(){
-    $('#saved-tsv').val(localStorage.getItem('saved_tsv') || '');
-    $('#saved-instructions').val(localStorage.getItem('saved_instructions') || '');
-    $('#saved-prompt').val(localStorage.getItem('saved_prompt') || '');
-    if($('#saved-tsv').val() || $('#saved-instructions').val() || $('#saved-prompt').val()){
+    const savedTsv = localStorage.getItem('saved_tsv') || '';
+    const savedInstructions = localStorage.getItem('saved_instructions') || '';
+    const savedPrompt = localStorage.getItem('saved_prompt') || '';
+
+    $('#saved-tsv').val(savedTsv);
+    $('#saved-instructions').val(savedInstructions);
+    $('#saved-prompt').val(savedPrompt);
+
+    if(savedTsv || savedInstructions || savedPrompt){
         $('#past-section').show();
+    }
+
+    return {savedTsv, savedInstructions, savedPrompt};
+}
+
+function autoPopulateFromSaved(){
+    const setup = loadSavedSetup();
+    if(setup.savedTsv || setup.savedInstructions || setup.savedPrompt){
+        $('#tsv-input').val(setup.savedTsv);
+        $('#instructions').val(setup.savedInstructions);
+        $('#prompt').val(setup.savedPrompt);
+
+        if(setup.savedTsv){
+            const formData = new FormData();
+            formData.append('tsv_text', setup.savedTsv);
+            $.ajax({
+                url: '/upload',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data){
+                    renderDataTable(JSON.parse(data));
+                },
+                error: function(xhr){ console.error(xhr.responseText); }
+            });
+        }
     }
 }
 
 $(document).ready(function(){
-    loadSavedSetup();
+    autoPopulateFromSaved();
 });
 
 $('#upload-form').on('submit', function(e){
