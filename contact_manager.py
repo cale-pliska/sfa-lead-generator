@@ -52,6 +52,21 @@ def add_contacts(businesses: list[str]) -> pd.DataFrame:
     return df
 
 
+def add_contacts_from_json(results: list[str]) -> pd.DataFrame:
+    """Append contacts using JSON strings already generated."""
+    df = load_contacts()
+    new_rows = []
+    for text in results:
+        if not text:
+            continue
+        contact = _ensure_json(text)
+        new_rows.append(contact)
+    if new_rows:
+        df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+        save_contacts(df)
+    return df
+
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:

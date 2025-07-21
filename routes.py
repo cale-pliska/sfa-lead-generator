@@ -2,7 +2,11 @@ import io
 import pandas as pd
 from flask import Blueprint, render_template, request, jsonify
 
-from contact_manager import load_contacts, add_contacts as _add_contacts
+from contact_manager import (
+    load_contacts,
+    add_contacts as _add_contacts,
+    add_contacts_from_json as _import_contacts,
+)
 
 from processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
@@ -75,5 +79,16 @@ def add_contacts_route():
     if not isinstance(businesses, list):
         return 'Invalid payload', 400
     df = _add_contacts(businesses)
+    return df.to_json(orient='records')
+
+
+@bp.route('/import_contacts', methods=['POST'])
+def import_contacts_route():
+    """Import contacts from processed JSON results."""
+    data = request.get_json(silent=True) or {}
+    results = data.get('results', [])
+    if not isinstance(results, list):
+        return 'Invalid payload', 400
+    df = _import_contacts(results)
     return df.to_json(orient='records')
 

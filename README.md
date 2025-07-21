@@ -1,12 +1,3 @@
-source venv/bin/activate
-source .env
-flask run --debug
-
-
-## TODO: -> 
-Make this cleaner like using make (eventually)
-
-
 # SFA Lead Generator
 
 This project provides a lightweight web interface for pasting tab separated values (TSV) and processing each row through the ChatGPT API. It is useful for quick lead generation or analytics workflows that require simple batch processing.
@@ -60,5 +51,8 @@ python contact_manager.py "Acme Corp" "Contoso"
 
 This command outputs the updated **CONTACTS** table and saves it to `contacts.csv`.
 
-You can also manage contacts through the web interface. Visit `/contacts` while the
-Flask app is running to add new businesses and view the current contacts table.
+You can also manage contacts through the web interface. Visit `/contacts` while the Flask app is running to add new businesses and view the current contacts table.
+
+### Importing contacts from processed results
+
+After running a prompt that returns contact details as JSON, click **Import Contacts** on the main page. The JSON from each row will be parsed and appended to `contacts.csv`.

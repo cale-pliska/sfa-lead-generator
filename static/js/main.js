@@ -1,3 +1,5 @@
+var lastResults = null;
+
 function loadSavedSetup(){
     $('#saved-tsv').val(localStorage.getItem('saved_tsv') || '');
     $('#saved-instructions').val(localStorage.getItem('saved_instructions') || '');
@@ -71,7 +73,24 @@ $('#process-btn').on('click', function(){
         data: JSON.stringify({prompt: prompt, instructions: instructions}),
         success: function(data){
             console.log("Raw data from backend:", data);
+            lastResults = data;
             renderTable(data);
+            $('#import-contacts-btn').show();
+        },
+        error: function(xhr){ alert(xhr.responseText); }
+    });
+});
+
+$('#import-contacts-btn').on('click', function(){
+    if(!lastResults){ return; }
+    var results = lastResults.map(function(row){ return row.result; }).filter(Boolean);
+    $.ajax({
+        url: '/import_contacts',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({results: results}),
+        success: function(){
+            alert('Contacts imported');
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
