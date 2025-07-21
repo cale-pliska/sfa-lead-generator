@@ -12,35 +12,47 @@
 </head>
 <body>
 <h1>SFA Lead Generator</h1>
-<form id="upload-form" method="post" enctype="multipart/form-data">
-    <label>Paste TSV Data:</label><br>
-    <textarea name="tsv_text" id="tsv-input"></textarea><br>
-    <button type="submit">Load Data</button>
-    <button type="button" id="save-setup-btn">Save Setup</button>
-</form>
 
-<div id="past-section" style="display:none; margin-top:1em;">
-    <h3>Saved Setup</h3>
-    <label>TSV Input:</label><br>
-    <textarea id="saved-tsv"></textarea><br>
-    <label>Instructions:</label><br>
-    <textarea id="saved-instructions" style="height:80px;"></textarea><br>
-    <label>Prompt:</label><br>
-    <input type="text" id="saved-prompt" style="width:100%;"><br>
-    <button type="button" id="load-setup-btn">Load Saved Setup</button>
+<div id="step1">
+    <h2>STEP 1: Initial Data Load</h2>
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        <label>Paste TSV Data:</label><br>
+        <textarea name="tsv_text" id="tsv-input"></textarea><br>
+        <button type="submit">Load Data</button>
+        <button type="button" id="save-setup-btn">Save Setup</button>
+    </form>
+
+    <div id="past-section" style="display:none; margin-top:1em;">
+        <h3>Saved Setup</h3>
+        <label>TSV Input:</label><br>
+        <textarea id="saved-tsv"></textarea><br>
+        <label>Instructions:</label><br>
+        <textarea id="saved-instructions" style="height:80px;"></textarea><br>
+        <label>Prompt:</label><br>
+        <input type="text" id="saved-prompt" style="width:100%;"><br>
+        <button type="button" id="load-setup-btn">Load Saved Setup</button>
+    </div>
+
+    <div id="table-container"></div>
 </div>
 
-<div id="table-container"></div>
+<div id="step2" style="display:none; margin-top:2em;">
+    <h2>STEP 2: Generate Contacts</h2>
+    <div id="process-section">
+        <label>Instructions:</label><br>
+        <textarea id="instructions" style="height:80px;"></textarea><br>
+        <label>Prompt (use column names in {braces}):</label><br>
+        <input type="text" id="prompt" style="width:100%;" placeholder="e.g. Summarize {name}"><br>
+        <label>Row index for single run:</label>
+        <input type="number" id="row-index" value="0" min="0"><br>
+        <button id="process-single-btn">Process Single Row</button>
+        <button id="process-btn">Process All Rows</button>
+    </div>
+    <div id="results-container" style="margin-top:1em;"></div>
+</div>
 
-<div id="process-section" style="display:none;">
-    <label>Instructions:</label><br>
-    <textarea id="instructions" style="height:80px;"></textarea><br>
-    <label>Prompt (use column names in {braces}):</label><br>
-    <input type="text" id="prompt" style="width:100%;" placeholder="e.g. Summarize {name}"><br>
-    <label>Row index for single run:</label>
-    <input type="number" id="row-index" value="0" min="0"><br>
-    <button id="process-single-btn">Process Single Row</button>
-    <button id="process-btn">Process All Rows</button>
+<div id="step3" style="margin-top:2em;">
+    <h2>STEP 3: (placeholder)</h2>
 </div>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
