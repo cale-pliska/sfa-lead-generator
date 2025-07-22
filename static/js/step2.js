@@ -1,3 +1,5 @@
+var step2Results = [];
+
 function renderResultsTable(data){
     if(!data.length){ $('#results-container').html('No results'); return; }
     var html = '<table><thead><tr>';
@@ -38,6 +40,7 @@ $('#process-btn').on('click', function(){
         data: JSON.stringify({prompt: prompt, instructions: instructions}),
         success: function(data){
             console.log("Raw data from backend:", data);
+            step2Results = data;
             renderResultsTable(data);
         },
         error: function(xhr){ alert(xhr.responseText); }
@@ -54,6 +57,7 @@ $('#process-single-btn').on('click', function(){
         contentType: 'application/json',
         data: JSON.stringify({prompt: prompt, instructions: instructions, row_index: rowIndex}),
         success: function(data){
+            step2Results[rowIndex] = data;
             addOrUpdateResultRow(data, rowIndex);
         },
         error: function(xhr){ alert(xhr.responseText); }
