@@ -40,7 +40,7 @@ def _format_prompt(prompt: str, row: pd.Series) -> str:
         return f"Missing column: {e}"
 
 
-def _parse_contacts(raw_result: str):
+def parse_contacts(raw_result: str):
     """Return a list of contact dicts parsed from the raw OpenAI result."""
     try:
         return json.loads(raw_result)
@@ -56,19 +56,26 @@ def _parse_contacts(raw_result: str):
             return []
 
 
+def parse_results_to_contacts(results):
+    """Parse the 'result' field from each row of step 2 output."""
+    contacts = []
+    for row in results:
+        raw = row.get('result', '') if isinstance(row, dict) else str(row)
+        contacts.extend(parse_contacts(raw))
+    return contacts
+
+
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     """Apply the prompt to each row of the dataframe and return results."""
     processed = []
     for _, row in df.iterrows():
         message = _format_prompt(prompt, row)
         result = _call_openai(instructions, message)
-        contacts = _parse_contacts(result)
-        processed.extend(contacts)
+        processed.append({**row.to_dict(), 'result': result})
     return processed
 
 
 def apply_prompt_to_row(row: pd.Series, instructions: str, prompt: str) -> str:
     """Process a single row using the given prompt."""
     message = _format_prompt(prompt, row)
-    result = _call_openai(instructions, message)
-    return _parse_contacts(result)
+    return _call_openai(instructions, message)

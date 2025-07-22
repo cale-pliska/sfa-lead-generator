@@ -1,3 +1,5 @@
+var step2Results = [];
+
 function renderResultsTable(data){
     if(!data.length){ $('#results-container').html('No results'); return; }
     var html = '<table><thead><tr>';
@@ -13,22 +15,19 @@ function renderResultsTable(data){
 }
 
 function addOrUpdateResultRow(rowData, index){
-    if(!Array.isArray(rowData)) rowData = [rowData];
     var $table = $('#results-container table');
     if(!$table.length){
-        renderResultsTable(rowData);
+        renderResultsTable([rowData]);
         return;
     }
-    rowData.forEach(function(data, i){
-        var keys = Object.keys(data);
-        var rowHtml = '<tr>' + keys.map(function(k){ return '<td>'+data[k]+'</td>'; }).join('') + '</tr>';
-        var $rows = $table.find('tbody tr');
-        if(index + i < $rows.length){
-            $rows.eq(index + i).replaceWith(rowHtml);
-        } else {
-            $table.find('tbody').append(rowHtml);
-        }
-    });
+    var keys = Object.keys(rowData);
+    var rowHtml = '<tr>' + keys.map(function(k){ return '<td>'+rowData[k]+'</td>'; }).join('') + '</tr>';
+    var $rows = $table.find('tbody tr');
+    if(index < $rows.length){
+        $rows.eq(index).replaceWith(rowHtml);
+    } else {
+        $table.find('tbody').append(rowHtml);
+    }
 }
 
 $('#process-btn').on('click', function(){
@@ -41,6 +40,7 @@ $('#process-btn').on('click', function(){
         data: JSON.stringify({prompt: prompt, instructions: instructions}),
         success: function(data){
             console.log("Raw data from backend:", data);
+            step2Results = data;
             renderResultsTable(data);
         },
         error: function(xhr){ alert(xhr.responseText); }
@@ -57,6 +57,7 @@ $('#process-single-btn').on('click', function(){
         contentType: 'application/json',
         data: JSON.stringify({prompt: prompt, instructions: instructions, row_index: rowIndex}),
         success: function(data){
+            step2Results[rowIndex] = data;
             addOrUpdateResultRow(data, rowIndex);
         },
         error: function(xhr){ alert(xhr.responseText); }
