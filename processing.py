@@ -41,9 +41,9 @@ def _format_prompt(prompt: str, row: pd.Series) -> str:
 
 
 def parse_contacts(raw_result: str):
-    """Return a list of contact dicts parsed from the raw OpenAI result."""
+    """Return parsed contacts and whether parsing succeeded."""
     try:
-        return json.loads(raw_result)
+        return json.loads(raw_result), True
     except json.JSONDecodeError:
         fix_prompt = (
             "Convert the following text to valid JSON array of contacts with "
@@ -51,18 +51,38 @@ def parse_contacts(raw_result: str):
         )
         fixed = _call_openai("", f"{fix_prompt}\n\n{raw_result}", model="gpt-3.5-turbo")
         try:
-            return json.loads(fixed)
+            return json.loads(fixed), True
         except json.JSONDecodeError:
-            return []
+            return [], False
 
 
 def parse_results_to_contacts(results):
     """Parse the 'result' field from each row of step 2 output."""
     contacts = []
+    parse_failed = False
     for row in results:
         raw = row.get('result', '') if isinstance(row, dict) else str(row)
-        contacts.extend(parse_contacts(raw))
-    return contacts
+        row_contacts, success = parse_contacts(raw)
+        contacts.extend(row_contacts)
+        if not success:
+            parse_failed = True
+
+    if contacts or not parse_failed:
+        return contacts
+
+    combined = "\n".join(
+        row.get('result', '') if isinstance(row, dict) else str(row)
+        for row in results
+    )
+    fix_prompt = (
+        "Convert the following text to valid JSON array of contacts with "
+        "firstname, lastname, and role fields. Respond only with the JSON."
+    )
+    fixed = _call_openai("", f"{fix_prompt}\n\n{combined}", model="gpt-3.5-turbo")
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        return []
 
 
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
