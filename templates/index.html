@@ -47,8 +47,24 @@
     <div id="contacts-container" style="margin-top:1em;"></div>
 </div>
 
+<div id="step4" style="margin-top:2em;">
+    <h2>STEP 4: Enrich Contacts</h2>
+    <div id="step4-process-section">
+        <label>Instructions:</label><br>
+        <textarea id="instructions-step4" style="height:80px;"></textarea><br>
+        <label>Prompt (use column names in {braces}):</label><br>
+        <input type="text" id="prompt-step4" style="width:100%;" placeholder="e.g. Enrich {business_name}"><br>
+        <label>Row index for single run:</label>
+        <input type="number" id="row-index-step4" value="0" min="0"><br>
+        <button id="process-single-step4-btn">Process Single Row</button>
+        <button id="process-step4-btn">Process All Rows</button>
+    </div>
+    <div id="step4-results-container" style="margin-top:1em;"></div>
+</div>
+
 <script src="{{ url_for('static', filename='js/step1.js') }}"></script>
 <script src="{{ url_for('static', filename='js/step2.js') }}"></script>
 <script src="{{ url_for('static', filename='js/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='js/step4.js') }}"></script>
 </body>
 </html>
