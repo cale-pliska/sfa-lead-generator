@@ -1,5 +1,15 @@
 var parsedContacts = [];
 
+$(document).ready(function(){
+    var saved = localStorage.getItem('saved_contacts');
+    if(saved){
+        try {
+            parsedContacts = JSON.parse(saved);
+            renderContactsTable(parsedContacts);
+        } catch(e){ console.error(e); }
+    }
+});
+
 function renderContactsTable(data){
     if(!data.length){ $('#contacts-container').html('No contacts'); return; }
     var html = '<table><thead><tr>';
@@ -30,4 +40,8 @@ $('#parse-btn').on('click', function(){
         },
         error: function(xhr){ alert(xhr.responseText); }
     });
+});
+
+$('#save-setup-btn').on('click', function(){
+    localStorage.setItem('saved_contacts', JSON.stringify(parsedContacts));
 });

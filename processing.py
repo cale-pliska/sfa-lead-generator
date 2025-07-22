@@ -73,7 +73,20 @@ def parse_results_to_contacts(results):
     contacts = []
     for row in results:
         raw = row.get('result', '') if isinstance(row, dict) else str(row)
-        contacts.extend(parse_contacts(raw))
+        business_name = None
+        if isinstance(row, dict):
+            for key in row.keys():
+                lower = key.lower()
+                if lower == 'business name' or lower == 'business_name' or (
+                    'business' in lower and 'name' in lower):
+                    business_name = row[key]
+                    break
+            if business_name is None and 'name' in row:
+                business_name = row['name']
+        for contact in parse_contacts(raw):
+            if business_name is not None:
+                contact['business_name'] = business_name
+            contacts.append(contact)
     return contacts
 
 
