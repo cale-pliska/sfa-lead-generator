@@ -3,14 +3,6 @@ function loadSavedSetup(){
     const savedInstructions = localStorage.getItem('saved_instructions') || '';
     const savedPrompt = localStorage.getItem('saved_prompt') || '';
 
-    $('#saved-tsv').val(savedTsv);
-    $('#saved-instructions').val(savedInstructions);
-    $('#saved-prompt').val(savedPrompt);
-
-    if(savedTsv || savedInstructions || savedPrompt){
-        $('#past-section').show();
-    }
-
     return {savedTsv, savedInstructions, savedPrompt};
 }
 
@@ -63,19 +55,6 @@ $('#save-setup-btn').on('click', function(){
     localStorage.setItem('saved_tsv', $('#tsv-input').val());
     localStorage.setItem('saved_instructions', $('#instructions').val());
     localStorage.setItem('saved_prompt', $('#prompt').val());
-    loadSavedSetup();
-});
-
-$('#load-setup-btn').on('click', function(){
-    $('#tsv-input').val($('#saved-tsv').val());
-    $('#instructions').val($('#saved-instructions').val());
-    $('#prompt').val($('#saved-prompt').val());
-});
-
-$('#saved-tsv, #saved-instructions, #saved-prompt').on('change', function(){
-    localStorage.setItem('saved_tsv', $('#saved-tsv').val());
-    localStorage.setItem('saved_instructions', $('#saved-instructions').val());
-    localStorage.setItem('saved_prompt', $('#saved-prompt').val());
 });
 
 function renderDataTable(data){
