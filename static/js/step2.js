@@ -13,19 +13,22 @@ function renderResultsTable(data){
 }
 
 function addOrUpdateResultRow(rowData, index){
+    if(!Array.isArray(rowData)) rowData = [rowData];
     var $table = $('#results-container table');
     if(!$table.length){
-        renderResultsTable([rowData]);
+        renderResultsTable(rowData);
         return;
     }
-    var keys = Object.keys(rowData);
-    var rowHtml = '<tr>' + keys.map(function(k){ return '<td>'+rowData[k]+'</td>'; }).join('') + '</tr>';
-    var $rows = $table.find('tbody tr');
-    if(index < $rows.length){
-        $rows.eq(index).replaceWith(rowHtml);
-    } else {
-        $table.find('tbody').append(rowHtml);
-    }
+    rowData.forEach(function(data, i){
+        var keys = Object.keys(data);
+        var rowHtml = '<tr>' + keys.map(function(k){ return '<td>'+data[k]+'</td>'; }).join('') + '</tr>';
+        var $rows = $table.find('tbody tr');
+        if(index + i < $rows.length){
+            $rows.eq(index + i).replaceWith(rowHtml);
+        } else {
+            $table.find('tbody').append(rowHtml);
+        }
+    });
 }
 
 $('#process-btn').on('click', function(){

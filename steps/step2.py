@@ -26,7 +26,5 @@ def process_single():
         return 'Invalid row index', 400
 
     row = data_store.DATAFRAME.iloc[row_index]
-    result = apply_prompt_to_row(row, instructions, prompt)
-    new_row = row.to_dict()
-    new_row['result'] = result
-    return jsonify(new_row)
+    contacts = apply_prompt_to_row(row, instructions, prompt)
+    return jsonify(contacts)
