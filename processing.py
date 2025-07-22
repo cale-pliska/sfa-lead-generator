@@ -2,6 +2,7 @@ import os
 import pandas as pd
 
 import json
+import re
 from openai import OpenAI
 
 # Create a reusable OpenAI client instance
@@ -40,49 +41,40 @@ def _format_prompt(prompt: str, row: pd.Series) -> str:
         return f"Missing column: {e}"
 
 
+def _strip_json_codeblock(text: str) -> str:
+    """Return contents inside the first JSON-style code block if present."""
+    match = re.search(r"```json\s*(\[.*?\])\s*```", text, flags=re.DOTALL)
+    if match:
+        return match.group(1)
+    match = re.search(r"```\s*(\[.*?\])\s*```", text, flags=re.DOTALL)
+    if match:
+        return match.group(1)
+    start = text.find('[')
+    end = text.rfind(']')
+    if start != -1 and end != -1 and start < end:
+        return text[start:end + 1]
+    return text
+
+
 def parse_contacts(raw_result: str):
-    """Return parsed contacts and whether parsing succeeded."""
+    """Return a list of contact dicts parsed from the raw OpenAI result."""
     try:
-        return json.loads(raw_result), True
+        return json.loads(raw_result)
     except json.JSONDecodeError:
-        fix_prompt = (
-            "Convert the following text to valid JSON array of contacts with "
-            "firstname, lastname, and role fields. Respond only with the JSON."
-        )
-        fixed = _call_openai("", f"{fix_prompt}\n\n{raw_result}", model="gpt-3.5-turbo")
+        cleaned = _strip_json_codeblock(raw_result)
         try:
-            return json.loads(fixed), True
+            return json.loads(cleaned)
         except json.JSONDecodeError:
-            return [], False
+            return []
 
 
 def parse_results_to_contacts(results):
     """Parse the 'result' field from each row of step 2 output."""
     contacts = []
-    parse_failed = False
     for row in results:
         raw = row.get('result', '') if isinstance(row, dict) else str(row)
-        row_contacts, success = parse_contacts(raw)
-        contacts.extend(row_contacts)
-        if not success:
-            parse_failed = True
-
-    if contacts or not parse_failed:
-        return contacts
-
-    combined = "\n".join(
-        row.get('result', '') if isinstance(row, dict) else str(row)
-        for row in results
-    )
-    fix_prompt = (
-        "Convert the following text to valid JSON array of contacts with "
-        "firstname, lastname, and role fields. Respond only with the JSON."
-    )
-    fixed = _call_openai("", f"{fix_prompt}\n\n{combined}", model="gpt-3.5-turbo")
-    try:
-        return json.loads(fixed)
-    except json.JSONDecodeError:
-        return []
+        contacts.extend(parse_contacts(raw))
+    return contacts
 
 
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
