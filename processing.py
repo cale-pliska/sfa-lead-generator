@@ -74,8 +74,9 @@ def _normalize_contact(contact: dict) -> dict:
     """Return a new contact dict with common fields normalized."""
     normalized = {}
     for key, value in contact.items():
-        lower = key.lower().replace(" ", "_")
-        if lower in {"email", "email_address"}:
+        lower = key.lower().strip().replace(" ", "_")
+        if "email" in lower:
+            # Collapse any key containing the word "email" to just "email"
             normalized["email"] = value
         else:
             normalized[key] = value
