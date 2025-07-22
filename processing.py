@@ -2,6 +2,7 @@ import os
 import pandas as pd
 
 import json
+import re
 from openai import OpenAI
 
 # Create a reusable OpenAI client instance
@@ -40,18 +41,29 @@ def _format_prompt(prompt: str, row: pd.Series) -> str:
         return f"Missing column: {e}"
 
 
+def _strip_json_codeblock(text: str) -> str:
+    """Return contents inside the first JSON-style code block if present."""
+    match = re.search(r"```json\s*(\[.*?\])\s*```", text, flags=re.DOTALL)
+    if match:
+        return match.group(1)
+    match = re.search(r"```\s*(\[.*?\])\s*```", text, flags=re.DOTALL)
+    if match:
+        return match.group(1)
+    start = text.find('[')
+    end = text.rfind(']')
+    if start != -1 and end != -1 and start < end:
+        return text[start:end + 1]
+    return text
+
+
 def parse_contacts(raw_result: str):
     """Return a list of contact dicts parsed from the raw OpenAI result."""
     try:
         return json.loads(raw_result)
     except json.JSONDecodeError:
-        fix_prompt = (
-            "Convert the following text to valid JSON array of contacts with "
-            "firstname, lastname, and role fields. Respond only with the JSON."
-        )
-        fixed = _call_openai("", f"{fix_prompt}\n\n{raw_result}", model="gpt-3.5-turbo")
+        cleaned = _strip_json_codeblock(raw_result)
         try:
-            return json.loads(fixed)
+            return json.loads(cleaned)
         except json.JSONDecodeError:
             return []
 
