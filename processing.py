@@ -68,12 +68,25 @@ def parse_contacts(raw_result: str):
             return []
 
 
+def _extract_business_name(row: dict):
+    """Try to guess the business name column from the given row."""
+    for key, value in row.items():
+        lower = key.lower().replace('_', ' ')
+        if 'business' in lower and 'name' in lower:
+            return value
+    return row.get('name')
+
+
 def parse_results_to_contacts(results):
     """Parse the 'result' field from each row of step 2 output."""
     contacts = []
     for row in results:
         raw = row.get('result', '') if isinstance(row, dict) else str(row)
-        contacts.extend(parse_contacts(raw))
+        business_name = _extract_business_name(row) if isinstance(row, dict) else None
+        for contact in parse_contacts(raw):
+            if business_name is not None:
+                contact['business_name'] = business_name
+            contacts.append(contact)
     return contacts
 
 
