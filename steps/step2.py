@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from . import data_store
 from processing import apply_prompt_to_dataframe, apply_prompt_to_row
+from tools import get_step2_tool
 
 step2_bp = Blueprint("step2", __name__)
 
@@ -11,7 +12,10 @@ def process():
     """Apply the prompt to the entire DataFrame."""
     prompt = request.json.get("prompt", "")
     instructions = request.json.get("instructions", "")
-    results = apply_prompt_to_dataframe(data_store.DATAFRAME, instructions, prompt)
+    tool = get_step2_tool()
+    results = apply_prompt_to_dataframe(
+        data_store.DATAFRAME, instructions, prompt, tools=[tool]
+    )
     return jsonify(results)
 
 
@@ -30,7 +34,8 @@ def process_single():
         return "Invalid row index", 400
 
     row = data_store.DATAFRAME.iloc[row_index]
-    result = apply_prompt_to_row(row, instructions, prompt)
+    tool = get_step2_tool()
+    result = apply_prompt_to_row(row, instructions, prompt, tools=[tool])
     new_row = row.to_dict()
     new_row["result"] = result
     return jsonify(new_row)

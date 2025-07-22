@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 
 from processing import apply_prompt_to_dataframe, apply_prompt_to_row
+from tools import get_step4_tool
 
 step4_bp = Blueprint("step4", __name__, url_prefix="/step4")
 
@@ -14,7 +15,8 @@ def process():
     contacts = request.json.get("contacts", [])
 
     df = pd.DataFrame(contacts)
-    results = apply_prompt_to_dataframe(df, instructions, prompt)
+    tool = get_step4_tool()
+    results = apply_prompt_to_dataframe(df, instructions, prompt, tools=[tool])
     return jsonify(results)
 
 
@@ -29,6 +31,7 @@ def process_single():
         return "No contact provided", 400
 
     row = pd.Series(contact)
-    result = apply_prompt_to_row(row, instructions, prompt)
+    tool = get_step4_tool()
+    result = apply_prompt_to_row(row, instructions, prompt, tools=[tool])
     new_row = {**contact, "result": result}
     return jsonify(new_row)

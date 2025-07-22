@@ -4,13 +4,17 @@ import pandas as pd
 import json
 import re
 from openai import OpenAI
+from typing import List, Optional
 
 # Create a reusable OpenAI client instance
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def _call_openai(
-    instructions: str, message: str, model: str = "gpt-4o-search-preview"
+    instructions: str,
+    message: str,
+    model: str = "gpt-4o-search-preview",
+    tools: Optional[List[dict]] = None,
 ) -> str:
     """Return completion for the given message using the specified model or placeholder text."""
     if not client.api_key:
@@ -26,12 +30,23 @@ def _call_openai(
             messages.append({"role": "system", "content": instructions})
         messages.append({"role": "user", "content": message})
 
-        response = client.chat.completions.create(
-            model=model,
-            web_search_options={},
-            messages=messages,
-        )
-        return response.choices[0].message.content.strip()
+        kwargs = {
+            "model": model,
+            "web_search_options": {},
+            "messages": messages,
+        }
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = {
+                "type": "function",
+                "function": {"name": tools[0]["function"]["name"]},
+            }
+
+        response = client.chat.completions.create(**kwargs)
+        choice = response.choices[0]
+        if tools and choice.finish_reason == "tool_calls" and choice.message.tool_calls:
+            return choice.message.tool_calls[0].function.arguments
+        return choice.message.content.strip()
     except Exception as e:
         return f"[error] {str(e)}"
 
@@ -61,11 +76,17 @@ def _strip_json_codeblock(text: str) -> str:
 def parse_contacts(raw_result: str):
     """Return a list of contact dicts parsed from the raw OpenAI result."""
     try:
-        return json.loads(raw_result)
+        data = json.loads(raw_result)
+        if isinstance(data, dict) and "contacts" in data:
+            return data["contacts"]
+        return data
     except json.JSONDecodeError:
         cleaned = _strip_json_codeblock(raw_result)
         try:
-            return json.loads(cleaned)
+            data = json.loads(cleaned)
+            if isinstance(data, dict) and "contacts" in data:
+                return data["contacts"]
+            return data
         except json.JSONDecodeError:
             return []
 
@@ -105,17 +126,21 @@ def parse_results_to_contacts(results):
     return contacts
 
 
-def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
+def apply_prompt_to_dataframe(
+    df: pd.DataFrame, instructions: str, prompt: str, tools: Optional[List[dict]] = None
+):
     """Apply the prompt to each row of the dataframe and return results."""
     processed = []
     for _, row in df.iterrows():
         message = _format_prompt(prompt, row)
-        result = _call_openai(instructions, message)
+        result = _call_openai(instructions, message, tools=tools)
         processed.append({**row.to_dict(), "result": result})
     return processed
 
 
-def apply_prompt_to_row(row: pd.Series, instructions: str, prompt: str) -> str:
+def apply_prompt_to_row(
+    row: pd.Series, instructions: str, prompt: str, tools: Optional[List[dict]] = None
+) -> str:
     """Process a single row using the given prompt."""
     message = _format_prompt(prompt, row)
-    return _call_openai(instructions, message)
+    return _call_openai(instructions, message, tools=tools)
