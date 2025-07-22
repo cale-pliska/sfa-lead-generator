@@ -9,11 +9,13 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def _call_openai(instructions: str, message: str, model: str = "gpt-4o-search-preview") -> str:
+def _call_openai(
+    instructions: str, message: str, model: str = "gpt-4o-search-preview"
+) -> str:
     """Return completion for the given message using the specified model or placeholder text."""
     if not client.api_key:
         return f"[placeholder] {message}"
-    
+
     print("\n[OpenAI Request]")
     print("System Instructions:", instructions)
     print("User Message:", message)
@@ -49,10 +51,10 @@ def _strip_json_codeblock(text: str) -> str:
     match = re.search(r"```\s*(\[.*?\])\s*```", text, flags=re.DOTALL)
     if match:
         return match.group(1)
-    start = text.find('[')
-    end = text.rfind(']')
+    start = text.find("[")
+    end = text.rfind("]")
     if start != -1 and end != -1 and start < end:
-        return text[start:end + 1]
+        return text[start : end + 1]
     return text
 
 
@@ -71,10 +73,10 @@ def parse_contacts(raw_result: str):
 def _extract_business_name(row: dict):
     """Try to guess the business name column from the given row."""
     for key, value in row.items():
-        lower = key.lower().replace('_', ' ')
-        if 'business' in lower and 'name' in lower:
+        lower = key.lower().replace("_", " ")
+        if "business" in lower and "name" in lower:
             return value
-    return row.get('name')
+    return row.get("name")
 
 
 def parse_results_to_contacts(results):
@@ -109,7 +111,7 @@ def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     for _, row in df.iterrows():
         message = _format_prompt(prompt, row)
         result = _call_openai(instructions, message)
-        processed.append({**row.to_dict(), 'result': result})
+        processed.append({**row.to_dict(), "result": result})
     return processed
 
 
