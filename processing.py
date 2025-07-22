@@ -78,15 +78,28 @@ def _extract_business_name(row: dict):
 
 
 def parse_results_to_contacts(results):
-    """Parse the 'result' field from each row of step 2 output."""
+    """Parse the 'result' field from each row of step 2 output.
+
+    In addition to the contacts extracted from the JSON ``result`` field, all
+    other columns from the Step 2 table are carried over so that downstream
+    steps have full context for each contact.
+    """
     contacts = []
     for row in results:
-        raw = row.get('result', '') if isinstance(row, dict) else str(row)
-        business_name = _extract_business_name(row) if isinstance(row, dict) else None
+        if isinstance(row, dict):
+            raw = row.get("result", "")
+            base_data = {k: v for k, v in row.items() if k != "result"}
+            business_name = _extract_business_name(row)
+        else:
+            raw = str(row)
+            base_data = {}
+            business_name = None
+
         for contact in parse_contacts(raw):
+            contact_data = {**base_data, **contact}
             if business_name is not None:
-                contact['business_name'] = business_name
-            contacts.append(contact)
+                contact_data.setdefault("business_name", business_name)
+            contacts.append(contact_data)
     return contacts
 
 
