@@ -46,3 +46,18 @@ The server will start on `http://localhost:5000`.
 4. Provide a prompt like `Generate a short summary for {name}`.
 5. Optionally specify a row index and click **Process Single Row** to test your prompt on one row.
 6. Click **Process All Rows** to run the prompt on the entire dataset. A new `result` column will appear with the output from ChatGPT.
+
+### Step 2 Example Output
+
+After processing, the `result` field contains JSON with contact details. Email addresses are now included:
+
+```json
+[
+  { "firstname": "John", "lastname": "Smith", "role": "Founder", "email": "john.smith@abccompany.com" },
+  { "firstname": "Jane", "lastname": "Doe", "role": "COO", "email": "jane.doe@abccompany.com" },
+  { "firstname": "Michael", "lastname": "Johnson", "role": "Head of Operations", "email": "michael.johnson@abccompany.com" },
+  { "firstname": "Ryan", "lastname": "Patel", "role": "Founder", "email": "ryan.patel@abccompany.com" },
+  { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
+  { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
+]
+```

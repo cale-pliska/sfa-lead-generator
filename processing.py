@@ -70,6 +70,19 @@ def parse_contacts(raw_result: str):
             return []
 
 
+def _normalize_contact(contact: dict) -> dict:
+    """Return a new contact dict with common fields normalized."""
+    normalized = {}
+    for key, value in contact.items():
+        lower = key.lower().strip().replace(" ", "_")
+        if "email" in lower:
+            # Collapse any key containing the word "email" to just "email"
+            normalized["email"] = value
+        else:
+            normalized[key] = value
+    return normalized
+
+
 def _extract_business_name(row: dict):
     """Try to guess the business name column from the given row."""
     for key, value in row.items():
@@ -98,7 +111,8 @@ def parse_results_to_contacts(results):
             business_name = None
 
         for contact in parse_contacts(raw):
-            contact_data = {**base_data, **contact}
+            normalized = _normalize_contact(contact)
+            contact_data = {**base_data, **normalized}
             if business_name is not None:
                 contact_data.setdefault("business_name", business_name)
             contacts.append(contact_data)
