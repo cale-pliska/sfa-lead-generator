@@ -81,3 +81,19 @@ docker compose up -d --build
 The stack includes containers for the Flask backend, an Nginx front-end proxy,
 CouchDB, and PostgreSQL.
 
+### Makefile helpers
+
+You can also manage the containers through the provided `Makefile` targets:
+
+```bash
+# development
+make build-dev
+make run-dev
+make logs-dev
+
+# production
+make build-prod
+make run-prod
+make logs-prod
+```
+
