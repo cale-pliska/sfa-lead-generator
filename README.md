@@ -60,3 +60,40 @@ After processing, the `result` field contains JSON with contact details. Email a
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]
 ```
+
+## Docker
+
+A `docker-compose.yml` file is provided for production deployments along with a
+`docker-compose.dev.yml` for local development.
+
+Build and start all services for development:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+For production use the default compose file:
+
+```bash
+docker compose up -d --build
+```
+
+The stack includes containers for the Flask backend, an Nginx front-end proxy,
+CouchDB, and PostgreSQL.
+
+### Makefile helpers
+
+You can also manage the containers through the provided `Makefile` targets:
+
+```bash
+# development
+make build-dev
+make run-dev
+make logs-dev
+
+# production
+make build-prod
+make run-prod
+make logs-prod
+```
+
