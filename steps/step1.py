@@ -1,16 +1,10 @@
 import io
 import pandas as pd
-from flask import Blueprint, render_template, request
+from flask import Blueprint, request
 
 from . import data_store
 
 step1_bp = Blueprint("step1", __name__)
-
-
-@step1_bp.route("/")
-def index():
-    """Render the main page."""
-    return render_template("index.html")
 
 
 @step1_bp.route("/upload", methods=["POST"])

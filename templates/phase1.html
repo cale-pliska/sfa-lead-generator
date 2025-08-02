@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PHASE 1 - parse locations</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px; }
+        textarea { width: 100%; height: 80px; }
+        nav a { margin-right: 1em; }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="/">Home</a> |
+    <a href="/phase1">PHASE 1 - parse locations</a> |
+    <a href="/phase2">PHASE 2 - generate businesses</a> |
+    <a href="/phase3">PHASE 3 - generate contacts</a>
+</nav>
+<h1>PHASE 1 - parse locations</h1>
+<div id="step1">
+    <h2>STEP 1: Location Input</h2>
+    <label>Location:</label><br>
+    <input type="text" id="location-input" style="width:100%;"/><br>
+    <label>Instructions:</label><br>
+    <textarea id="instructions"></textarea><br>
+    <button id="process-btn">Process One Depth</button>
+    <div id="results-container"></div>
+</div>
+<script src="{{ url_for('static', filename='js/phase1.js') }}"></script>
+</body>
+</html>

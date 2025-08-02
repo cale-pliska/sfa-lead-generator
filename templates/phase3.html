@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PHASE 3 - generate contacts</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px; }
+        textarea { width: 100%; height: 150px; }
+        nav a { margin-right: 1em; }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="/">Home</a> |
+    <a href="/phase1">PHASE 1 - parse locations</a> |
+    <a href="/phase2">PHASE 2 - generate businesses</a> |
+    <a href="/phase3">PHASE 3 - generate contacts</a>
+</nav>
+<h1>PHASE 3 - generate contacts</h1>
+
+<div id="step1">
+    <h2>STEP 1: Initial Data Load</h2>
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        <label>Paste TSV Data:</label><br>
+        <textarea name="tsv_text" id="tsv-input"></textarea><br>
+        <button type="submit">Load Data</button>
+        <button type="button" id="save-setup-btn">Save Setup</button>
+    </form>
+
+
+    <div id="table-container"></div>
+</div>
+
+<div id="step2" style="margin-top:2em;">
+    <h2>STEP 2: Generate Contacts</h2>
+    <div id="process-section">
+        <label>Instructions:</label><br>
+        <textarea id="instructions" style="height:80px;"></textarea><br>
+        <label>Prompt (use column names in {braces}):</label><br>
+        <input type="text" id="prompt" style="width:100%;" placeholder="e.g. Summarize {name}"><br>
+        <label>Row index for single run:</label>
+        <input type="number" id="row-index" value="0" min="0"><br>
+        <button id="process-single-btn">Process Single Row</button>
+        <button id="process-btn">Process All Rows</button>
+    </div>
+    <div id="results-container" style="margin-top:1em;"></div>
+</div>
+
+<div id="step3" style="margin-top:2em;">
+    <h2>STEP 3: Parse Contacts</h2>
+    <button id="parse-btn">Parse Step 2 Results</button>
+    <div id="contacts-container" style="margin-top:1em;"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/step1.js') }}"></script>
+<script src="{{ url_for('static', filename='js/step2.js') }}"></script>
+<script src="{{ url_for('static', filename='js/step3.js') }}"></script>
+</body>
+</html>
