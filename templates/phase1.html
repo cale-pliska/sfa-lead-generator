@@ -13,10 +13,10 @@
 </head>
 <body>
 <nav>
-    <a href="{{ url_for('pages.home') }}">Home</a> |
-    <a href="{{ url_for('pages.phase1_page') }}">PHASE 1 - parse locations</a> |
-    <a href="{{ url_for('pages.phase2_page') }}">PHASE 2 - generate businesses</a> |
-    <a href="{{ url_for('pages.phase3_page') }}">PHASE 3 - generate contacts</a>
+    <a href="/templates/index.html">Home</a> |
+    <a href="/templates/phase1.html">PHASE 1 - parse locations</a> |
+    <a href="/templates/phase2.html">PHASE 2 - generate businesses</a> |
+    <a href="/templates/phase3.html">PHASE 3 - generate contacts</a>
 </nav>
 <h1>PHASE 1 - parse locations</h1>
 <div id="step1">
@@ -28,6 +28,6 @@
     <button id="process-btn">Process One Depth</button>
     <div id="results-container"></div>
 </div>
-<script src="{{ url_for('static', filename='js/phase1.js') }}"></script>
+<script src="../static/js/phase1.js"></script>
 </body>
 </html>
