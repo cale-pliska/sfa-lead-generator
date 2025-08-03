@@ -40,7 +40,7 @@ The server will start on `http://localhost:5000`.
 
 ## Usage
 
-1. Open the page in your browser.
+1. Open the home page in your browser and click **Generate Contacts** (or go directly to `/generate_contacts`).
 2. Paste your TSV data and click **Load Data**.
 3. Enter any **Instructions** and a prompt like `Generate a short summary for {name}`.
 4. Optionally specify a row index and click **Process Single Row** to test your prompt on one row.

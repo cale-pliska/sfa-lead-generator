@@ -13,6 +13,12 @@ def index():
     return render_template("index.html")
 
 
+@step1_bp.route("/generate_contacts")
+def generate_contacts():
+    """Render the generate contacts page."""
+    return render_template("generate_contacts.html")
+
+
 @step1_bp.route("/upload", methods=["POST"])
 def upload():
     """Load TSV data sent from the client and store it."""
