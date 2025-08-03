@@ -12,6 +12,24 @@ def home():
     """Render home page with links to all phases."""
     return render_template("index.html")
 
+
+@pages_bp.route("/phase1")
+def phase1_page():
+    """Render Phase 1 page."""
+    return render_template("phase1.html")
+
+
+@pages_bp.route("/phase2")
+def phase2_page():
+    """Render Phase 2 page."""
+    return render_template("phase2.html")
+
+
+@pages_bp.route("/phase3")
+def phase3_page():
+    """Render Phase 3 page."""
+    return render_template("phase3.html")
+
 @pages_bp.route("/phase1/process", methods=["POST"])
 def process_location():
     """Process a single location and return subregions with populations."""
