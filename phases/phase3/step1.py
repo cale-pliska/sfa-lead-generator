@@ -4,7 +4,7 @@ from flask import Blueprint, request
 
 from . import data_store
 
-step1_bp = Blueprint("step1", __name__)
+step1_bp = Blueprint("phase3_step1", __name__, url_prefix="/phase3")
 
 
 @step1_bp.route("/upload", methods=["POST"])
