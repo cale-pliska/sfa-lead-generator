@@ -119,6 +119,28 @@ def parse_results_to_contacts(results):
     return contacts
 
 
+def parse_json_response(raw_result: str):
+    """Parse a JSON array or object from an OpenAI response."""
+    try:
+        return json.loads(raw_result)
+    except json.JSONDecodeError:
+        cleaned = _strip_json_codeblock(raw_result)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            return []
+
+
+def fetch_subregions(location: str, instructions: str):
+    """Return list of subregions and populations for a location."""
+    message = (
+        f"For the location '{location}', list its immediate subregions with their population. "
+        "Respond in JSON array of objects with 'region' and 'population' fields."
+    )
+    raw = _call_openai(instructions, message)
+    return parse_json_response(raw)
+
+
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     """Apply the prompt to each row of the dataframe and return results."""
     processed = []
