@@ -1,4 +1,4 @@
-"""Blueprint registrations for application steps."""
+"""Blueprint registrations for the generate_contacts feature."""
 
 from .step1 import step1_bp
 from .step2 import step2_bp

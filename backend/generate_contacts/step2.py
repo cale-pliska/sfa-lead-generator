@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from . import data_store
-from processing import apply_prompt_to_dataframe, apply_prompt_to_row
+from .processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
 step2_bp = Blueprint("step2", __name__)
 

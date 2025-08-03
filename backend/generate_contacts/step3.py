@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from processing import parse_results_to_contacts
+from .processing import parse_results_to_contacts
 
 step3_bp = Blueprint("step3", __name__)
 
