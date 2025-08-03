@@ -3,7 +3,7 @@ from flask import Flask
 from dotenv import load_dotenv
 import openai
 
-from steps import step1_bp, step2_bp, step3_bp
+from backend.generate_contacts import step1_bp, step2_bp, step3_bp
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
