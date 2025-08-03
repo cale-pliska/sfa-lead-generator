@@ -17,7 +17,7 @@ function autoPopulateFromSaved() {
       const formData = new FormData();
       formData.append("tsv_text", setup.savedTsv);
       $.ajax({
-        url: "/upload",
+        url: "/phase3/upload",
         method: "POST",
         data: formData,
         processData: false,
@@ -41,7 +41,7 @@ $("#upload-form").on("submit", function (e) {
   e.preventDefault();
   var formData = new FormData(this);
   $.ajax({
-    url: "/upload",
+    url: "/phase3/upload",
     method: "POST",
     data: formData,
     processData: false,

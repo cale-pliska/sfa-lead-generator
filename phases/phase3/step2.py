@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from . import data_store
 from processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
-step2_bp = Blueprint("step2", __name__)
+step2_bp = Blueprint("phase3_step2", __name__, url_prefix="/phase3")
 
 
 @step2_bp.route("/process", methods=["POST"])

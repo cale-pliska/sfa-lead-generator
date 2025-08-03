@@ -3,7 +3,10 @@ from flask import Flask
 from dotenv import load_dotenv
 import openai
 
-from steps import pages_bp, step1_bp, step2_bp, step3_bp
+from phases.home import home_bp
+from phases.phase1 import phase1_bp
+from phases.phase2 import phase2_bp
+from phases.phase3 import phase3_bp, step1_bp, step2_bp, step3_bp
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -12,8 +15,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def create_app():
     app = Flask(__name__)
 
-    # Register blueprints for each step of the UI
-    app.register_blueprint(pages_bp)
+    # Register blueprints for each page
+    app.register_blueprint(home_bp)
+    app.register_blueprint(phase1_bp)
+    app.register_blueprint(phase2_bp)
+    app.register_blueprint(phase3_bp)
     app.register_blueprint(step1_bp)
     app.register_blueprint(step2_bp)
     app.register_blueprint(step3_bp)
