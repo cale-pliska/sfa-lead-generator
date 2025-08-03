@@ -1,12 +1,9 @@
-import os
 from flask import Flask
 from dotenv import load_dotenv
-import openai
 
 from steps import pages_bp, step1_bp, step2_bp, step3_bp
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def create_app():

@@ -1,12 +1,12 @@
 import os
-import pandas as pd
-
 import json
 import re
+
+import pandas as pd
 from openai import OpenAI
 
 # Create a reusable OpenAI client instance
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
 
 
 def _call_openai(
@@ -58,16 +58,16 @@ def _strip_json_codeblock(text: str) -> str:
     return text
 
 
-def parse_contacts(raw_result: str):
-    """Return a list of contact dicts parsed from the raw OpenAI result."""
+def _safe_json_loads(text: str, default):
+    """Attempt to parse JSON from ``text``; return ``default`` on failure."""
     try:
-        return json.loads(raw_result)
+        return json.loads(text)
     except json.JSONDecodeError:
-        cleaned = _strip_json_codeblock(raw_result)
+        cleaned = _strip_json_codeblock(text)
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError:
-            return []
+            return default
 
 
 def _normalize_contact(contact: dict) -> dict:
@@ -110,25 +110,13 @@ def parse_results_to_contacts(results):
             base_data = {}
             business_name = None
 
-        for contact in parse_contacts(raw):
+        for contact in _safe_json_loads(raw, []):
             normalized = _normalize_contact(contact)
             contact_data = {**base_data, **normalized}
             if business_name is not None:
                 contact_data.setdefault("business_name", business_name)
             contacts.append(contact_data)
     return contacts
-
-
-def parse_json_response(raw_result: str):
-    """Parse a JSON array or object from an OpenAI response."""
-    try:
-        return json.loads(raw_result)
-    except json.JSONDecodeError:
-        cleaned = _strip_json_codeblock(raw_result)
-        try:
-            return json.loads(cleaned)
-        except json.JSONDecodeError:
-            return []
 
 
 def fetch_subregions(location: str, instructions: str):
@@ -138,7 +126,7 @@ def fetch_subregions(location: str, instructions: str):
         "Respond in JSON array of objects with 'region' and 'population' fields."
     )
     raw = _call_openai(instructions, message)
-    return parse_json_response(raw)
+    return _safe_json_loads(raw, [])
 
 
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
