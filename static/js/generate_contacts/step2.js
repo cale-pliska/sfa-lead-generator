@@ -67,7 +67,7 @@ $("#process-btn").on("click", function () {
   var prompt = $("#prompt").val();
   var instructions = $("#instructions").val();
   $.ajax({
-    url: "/process",
+    url: "/generate-contacts/process",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({ prompt: prompt, instructions: instructions }),
@@ -87,7 +87,7 @@ $("#process-single-btn").on("click", function () {
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
   $.ajax({
-    url: "/process_single",
+    url: "/generate-contacts/process_single",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({

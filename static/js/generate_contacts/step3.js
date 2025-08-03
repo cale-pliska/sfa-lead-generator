@@ -45,7 +45,7 @@ $("#parse-btn").on("click", function () {
     return;
   }
   $.ajax({
-    url: "/parse_contacts",
+    url: "/generate-contacts/parse_contacts",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({ results: step2Results }),
