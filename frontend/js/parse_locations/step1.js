@@ -27,7 +27,6 @@ $(document).ready(function () {
                     const header = $('<tr></tr>');
                     header.append('<th>Population Stop Depth</th>');
                     header.append('<th>Location</th>');
-                    header.append('<th>GPT Instructions</th>');
                     header.append('<th>Temperature</th>');
                     header.append('<th>Result</th>');
                     table.append(header);
@@ -37,7 +36,6 @@ $(document).ready(function () {
                 const row = $('<tr></tr>');
                 row.append($('<td></td>').text(populationStopDepth));
                 row.append($('<td></td>').text(location));
-                row.append($('<td></td>').text(gptInstructions));
                 row.append($('<td></td>').text(temperature));
                 row.append($('<td></td>').text(result));
                 table.append(row);
