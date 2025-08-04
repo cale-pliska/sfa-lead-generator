@@ -6,13 +6,13 @@ $(document).ready(function () {
 
         const populationStopDepth = $('#population-stop-depth').val();
         const location = $('#location').val();
-        const gptPrompt = $('#gpt-prompt').val();
+        const gptInstructions = location;
 
         $.ajax({
-            url: '/parse_locations/run_prompt',
+            url: '/parse_locations/run_instructions',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ prompt: gptPrompt }),
+            data: JSON.stringify({ instructions: gptInstructions }),
             success: function (data) {
                 const result = data.result;
 
@@ -22,7 +22,7 @@ $(document).ready(function () {
                     const header = $('<tr></tr>');
                     header.append('<th>Population Stop Depth</th>');
                     header.append('<th>Location</th>');
-                    header.append('<th>GPT Prompt</th>');
+                    header.append('<th>GPT Instructions</th>');
                     header.append('<th>Result</th>');
                     table.append(header);
                     $('#results-container').append(table);
@@ -31,7 +31,7 @@ $(document).ready(function () {
                 const row = $('<tr></tr>');
                 row.append($('<td></td>').text(populationStopDepth));
                 row.append($('<td></td>').text(location));
-                row.append($('<td></td>').text(gptPrompt));
+                row.append($('<td></td>').text(gptInstructions));
                 row.append($('<td></td>').text(result));
                 table.append(row);
             },
