@@ -24,37 +24,20 @@ def run_instructions():
 
 @parse_locations_bp.route("/parse_locations/process_single", methods=["POST"])
 def process_single():
-    """Process rows up to the provided test loop depth."""
+    """Break a single location into smaller portions and capture the GPT output."""
     payload = request.json or {}
     instructions = payload.get("instructions", "")
-    test_loop_depth = int(payload.get("test_loop_depth", 1))
     data = payload.get("data", [])
 
     results = []
-    for entry in data:
+    for entry in data[:1]:  # only process the first row
         location = entry.get("location", "")
-        population = int(entry.get("result", 0))
-        population_stop_depth = int(entry.get("population_stop_depth", 0))
-
-        current_population = population
-        loop_depth = 1
-        while loop_depth <= test_loop_depth:
-            prompt = (
-                f"Location: {location}\n"
-                f"Population: {current_population}\n"
-                f"Population Stop Depth: {population_stop_depth}\n"
-                f"Test Loop Depth: {loop_depth}"
-            )
-            gpt_result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
-            try:
-                current_population = int(gpt_result)
-            except (ValueError, TypeError):
-                break
-            loop_depth += 1
-
+        population = entry.get("result", "")
+        prompt = f"Location: {location}\nPopulation: {population}"
+        gpt_result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
         results.append({
-            "location": location,
-            "population": current_population,
+            "prompt": prompt,
+            "output": gpt_result,
         })
 
     return jsonify({"results": results})

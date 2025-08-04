@@ -22,16 +22,17 @@ $(document).ready(function () {
         if (table.length === 0) {
             table = $('<table id="step2-results-table" border="1"></table>');
             const header = $('<tr></tr>');
-            header.append('<th>Location</th>');
-            header.append('<th>Population</th>');
+            header.append('<th>Prompt</th>');
+            header.append('<th>Output</th>');
             table.append(header);
             $('#step2-results-container').append(table);
         }
 
         results.forEach(function (item) {
             const row = $('<tr></tr>');
-            row.append($('<td></td>').text(item.location));
-            row.append($('<td></td>').text(item.population));
+            row.append($('<td></td>').text(item.prompt));
+            const outputCell = $('<td></td>').html((item.output || '').replace(/\n/g, '<br>'));
+            row.append(outputCell);
             table.append(row);
         });
     }
@@ -51,6 +52,8 @@ $(document).ready(function () {
             return;
         }
 
+        const row = rows[0]; // process only the first row
+
         $.ajax({
             url: '/parse_locations/process_single',
             method: 'POST',
@@ -58,7 +61,7 @@ $(document).ready(function () {
             data: JSON.stringify({
                 test_loop_depth: testLoopDepth,
                 instructions: instructions,
-                data: rows,
+                data: [row],
             }),
             success: function (data) {
                 renderResults(data.results || []);
