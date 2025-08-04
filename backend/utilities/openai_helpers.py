@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict, Optional
 
 from openai import OpenAI
 
@@ -11,6 +12,7 @@ def call_openai(
     message: str,
     model: str = "gpt-4o-search-preview",
     temperature: float = 0.5,
+    response_format: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Return completion for the given message using the specified model or placeholder text."""
     if not client.api_key:
@@ -27,10 +29,12 @@ def call_openai(
             messages.append({"role": "system", "content": instructions})
         messages.append({"role": "user", "content": message})
 
-        extra_args = {}
+        extra_args: Dict[str, Any] = {}
         if "search" in model:
             extra_args["web_search_options"] = {}
         extra_args["temperature"] = temperature
+        if response_format:
+            extra_args["response_format"] = response_format
 
         response = client.chat.completions.create(
             model=model,

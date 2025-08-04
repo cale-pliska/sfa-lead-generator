@@ -5,18 +5,17 @@ $(document).ready(function () {
         event.preventDefault();
 
         const location = $('#location').val();
-        const gptInstructions = $('#gpt-instructions').val();
 
         $.ajax({
             url: '/parse_locations/run_instructions',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                instructions: gptInstructions,
-                prompt: location,
+                location: location,
             }),
             success: function (data) {
-                const population = data.result;
+                const population = data.population;
+                const locationName = data.location_name;
 
                 let table = $('#results-table');
                 if (table.length === 0) {
@@ -29,7 +28,7 @@ $(document).ready(function () {
                 }
 
                 const row = $('<tr></tr>');
-                row.append($('<td></td>').text(location));
+                row.append($('<td></td>').text(locationName));
                 row.append($('<td></td>').text(population));
                 table.append(row);
             },
