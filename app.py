@@ -10,7 +10,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="frontend/js", template_folder="frontend/html")
 
     # Register blueprints for each step of the UI
     app.register_blueprint(step1_bp)
