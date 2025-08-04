@@ -6,13 +6,16 @@ $(document).ready(function () {
 
         const populationStopDepth = $('#population-stop-depth').val();
         const location = $('#location').val();
-        const gptInstructions = location;
+        const gptInstructions = $('#gpt-instructions').val();
 
         $.ajax({
             url: '/parse_locations/run_instructions',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ instructions: gptInstructions }),
+            data: JSON.stringify({
+                instructions: gptInstructions,
+                prompt: location,
+            }),
             success: function (data) {
                 const result = data.result;
 

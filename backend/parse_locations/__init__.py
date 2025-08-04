@@ -13,7 +13,9 @@ def parse_locations():
 
 @parse_locations_bp.route("/parse_locations/run_instructions", methods=["POST"])
 def run_instructions():
-    """Run the provided GPT instructions through OpenAI and return the result."""
-    instructions = (request.json or {}).get("instructions", "")
-    result = call_openai("", instructions, model="gpt-3.5-turbo")
+    """Run the provided prompt and GPT instructions through OpenAI and return the result."""
+    payload = request.json or {}
+    instructions = payload.get("instructions", "")
+    prompt = payload.get("prompt", "")
+    result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
     return jsonify({"result": result})
