@@ -9,7 +9,7 @@
 <h1>Parse Locations</h1>
 <form id="parse-locations-form">
     <label for="population-stop-depth">Population Stop Depth:</label><br>
-    <input type="number" id="population-stop-depth" name="population_stop_depth"><br>
+    <input type="number" id="population-stop-depth" name="population_stop_depth" value="100000" step="25000"><br>
 
     <label for="location">Location:</label><br>
     <input type="text" id="location" name="location"><br>
@@ -19,6 +19,8 @@
 
     <button type="submit">Submit</button>
 </form>
+
+<div id="results-container"></div>
 
 <script src="{{ url_for('static', filename='parse_locations/parse_locations.js') }}"></script>
 </body>
