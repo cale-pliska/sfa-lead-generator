@@ -21,10 +21,14 @@ def call_openai(instructions: str, message: str, model: str = "gpt-4o-search-pre
             messages.append({"role": "system", "content": instructions})
         messages.append({"role": "user", "content": message})
 
+        extra_args = {}
+        if "search" in model:
+            extra_args["web_search_options"] = {}
+
         response = client.chat.completions.create(
             model=model,
-            web_search_options={},
             messages=messages,
+            **extra_args,
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
