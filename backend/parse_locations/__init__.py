@@ -17,5 +17,6 @@ def run_instructions():
     payload = request.json or {}
     instructions = payload.get("instructions", "")
     prompt = payload.get("prompt", "")
-    result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
+    temperature = payload.get("temperature", 0.5)
+    result = call_openai(instructions, prompt, model="gpt-3.5-turbo", temperature=temperature)
     return jsonify({"result": result})

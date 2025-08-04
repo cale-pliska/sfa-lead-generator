@@ -7,6 +7,7 @@ $(document).ready(function () {
         const populationStopDepth = $('#population-stop-depth').val();
         const location = $('#location').val();
         const gptInstructions = $('#gpt-instructions').val();
+        const temperature = $('#temperature').val();
 
         $.ajax({
             url: '/parse_locations/run_instructions',
@@ -15,6 +16,7 @@ $(document).ready(function () {
             data: JSON.stringify({
                 instructions: gptInstructions,
                 prompt: location,
+                temperature: parseFloat(temperature),
             }),
             success: function (data) {
                 const result = data.result;
@@ -26,6 +28,7 @@ $(document).ready(function () {
                     header.append('<th>Population Stop Depth</th>');
                     header.append('<th>Location</th>');
                     header.append('<th>GPT Instructions</th>');
+                    header.append('<th>Temperature</th>');
                     header.append('<th>Result</th>');
                     table.append(header);
                     $('#results-container').append(table);
@@ -35,6 +38,7 @@ $(document).ready(function () {
                 row.append($('<td></td>').text(populationStopDepth));
                 row.append($('<td></td>').text(location));
                 row.append($('<td></td>').text(gptInstructions));
+                row.append($('<td></td>').text(temperature));
                 row.append($('<td></td>').text(result));
                 table.append(row);
             },
