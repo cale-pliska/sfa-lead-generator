@@ -1,15 +1,7 @@
 console.log('step2.js loaded');
 
 $(document).ready(function () {
-    $('#process-all').on('click', function () {
-        const testLoopDepth = parseInt($('#test-loop-depth').val(), 10);
-        const instructions = $('#gpt-instructions-step2').val();
-
-        if (isNaN(testLoopDepth) || testLoopDepth < 1 || testLoopDepth > 5) {
-            alert('Test Loop Depth must be between 1 and 5');
-            return;
-        }
-
+    function gatherRows() {
         const rows = [];
         $('#results-table tr').each(function (index) {
             if (index === 0) return; // skip header
@@ -22,7 +14,64 @@ $(document).ready(function () {
                 result: result,
             });
         });
+        return rows;
+    }
 
+    function renderResults(results) {
+        let table = $('#step2-results-table');
+        if (table.length === 0) {
+            table = $('<table id="step2-results-table" border="1"></table>');
+            const header = $('<tr></tr>');
+            header.append('<th>Location</th>');
+            header.append('<th>Population</th>');
+            table.append(header);
+            $('#step2-results-container').append(table);
+        }
+
+        results.forEach(function (item) {
+            const row = $('<tr></tr>');
+            row.append($('<td></td>').text(item.location));
+            row.append($('<td></td>').text(item.population));
+            table.append(row);
+        });
+    }
+
+    $('#process-single').on('click', function () {
+        const testLoopDepth = parseInt($('#test-loop-depth').val(), 10);
+        const instructions = $('#gpt-instructions-step2').val();
+
+        if (isNaN(testLoopDepth) || testLoopDepth < 1 || testLoopDepth > 5) {
+            alert('Test Loop Depth must be between 1 and 5');
+            return;
+        }
+
+        const rows = gatherRows();
+        if (rows.length === 0) {
+            alert('No data to process.');
+            return;
+        }
+
+        $.ajax({
+            url: '/parse_locations/process_single',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                test_loop_depth: testLoopDepth,
+                instructions: instructions,
+                data: rows,
+            }),
+            success: function (data) {
+                renderResults(data.results || []);
+            },
+            error: function (xhr) {
+                alert(xhr.responseText);
+            },
+        });
+    });
+
+    $('#process-all').on('click', function () {
+        const instructions = $('#gpt-instructions-step2').val();
+        const rows = gatherRows();
         if (rows.length === 0) {
             alert('No data to process.');
             return;
@@ -33,29 +82,11 @@ $(document).ready(function () {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                test_loop_depth: testLoopDepth,
                 instructions: instructions,
                 data: rows,
             }),
             success: function (data) {
-                const results = data.results || [];
-
-                let table = $('#step2-results-table');
-                if (table.length === 0) {
-                    table = $('<table id="step2-results-table" border="1"></table>');
-                    const header = $('<tr></tr>');
-                    header.append('<th>Location</th>');
-                    header.append('<th>Population</th>');
-                    table.append(header);
-                    $('#step2-results-container').append(table);
-                }
-
-                results.forEach(function (item) {
-                    const row = $('<tr></tr>');
-                    row.append($('<td></td>').text(item.location));
-                    row.append($('<td></td>').text(item.population));
-                    table.append(row);
-                });
+                renderResults(data.results || []);
             },
             error: function (xhr) {
                 alert(xhr.responseText);

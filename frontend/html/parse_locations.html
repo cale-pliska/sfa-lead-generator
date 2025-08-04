@@ -31,13 +31,14 @@
 </div>
 
 <div id="step2">
-    <h2>STEP 2: Process All</h2>
+    <h2>STEP 2: Process Results</h2>
     <label for="test-loop-depth">Test Loop Depth:</label><br>
     <input type="number" id="test-loop-depth" name="test_loop_depth" min="1" max="5" value="1"><br><br>
 
     <label for="gpt-instructions-step2">GPT Instructions:</label><br>
     <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50"></textarea><br><br>
 
+    <button id="process-single">Process Single</button>
     <button id="process-all">Process All</button>
 
     <div id="step2-results-container"></div>
