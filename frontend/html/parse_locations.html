@@ -16,9 +16,13 @@
 
         <label for="location">Location:</label><br>
         <input type="text" id="location" name="location"><br>
+        <small>This value is sent as the GPT prompt.</small><br><br>
 
-        <label for="gpt-prompt">GPT Prompt:</label><br>
-        <textarea id="gpt-prompt" name="gpt_prompt" style="width:100%; height:80px;"></textarea><br>
+        <label for="gpt-instructions">GPT Instructions:</label><br>
+        <textarea id="gpt-instructions" name="gpt_instructions" rows="4" cols="50"></textarea><br>
+
+        <label for="temperature">Temperature:</label><br>
+        <input type="number" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.5"><br>
 
         <button type="submit">Submit</button>
     </form>
