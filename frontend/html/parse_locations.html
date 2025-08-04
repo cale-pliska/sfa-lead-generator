@@ -9,20 +9,14 @@
 <h1>Parse Locations</h1>
 
 <div id="step1">
-    <h2>STEP 1: Parse Locations</h2>
+    <h2>STEP 1: Setup</h2>
     <form id="parse-locations-form">
-        <label for="population-stop-depth">Population Stop Depth:</label><br>
-        <input type="number" id="population-stop-depth" name="population_stop_depth" value="100000" step="25000"><br>
-
         <label for="location">Location:</label><br>
         <input type="text" id="location" name="location"><br>
         <small>This value is sent as the GPT prompt.</small><br><br>
 
         <label for="gpt-instructions">GPT Instructions:</label><br>
-        <textarea id="gpt-instructions" name="gpt_instructions" rows="4" cols="50"></textarea><br>
-
-        <label for="temperature">Temperature:</label><br>
-        <input type="number" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.5"><br>
+        <textarea id="gpt-instructions" name="gpt_instructions" rows="4" cols="50"></textarea><br><br>
 
         <button type="submit">Submit</button>
     </form>
@@ -31,10 +25,7 @@
 </div>
 
 <div id="step2">
-    <h2>STEP 2: Process Results</h2>
-    <label for="test-loop-depth">Test Loop Depth:</label><br>
-    <input type="number" id="test-loop-depth" name="test_loop_depth" min="1" max="5" value="1"><br><br>
-
+    <h2>STEP 2: Query</h2>
     <label for="gpt-instructions-step2">GPT Instructions:</label><br>
     <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50"></textarea><br><br>
 

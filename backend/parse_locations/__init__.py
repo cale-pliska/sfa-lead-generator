@@ -24,7 +24,7 @@ def run_instructions():
 
 @parse_locations_bp.route("/parse_locations/process_single", methods=["POST"])
 def process_single():
-    """Break a single location into smaller portions and capture the GPT output."""
+    """Query a single location and capture the raw GPT output."""
     payload = request.json or {}
     instructions = payload.get("instructions", "")
     data = payload.get("data", [])
@@ -32,12 +32,12 @@ def process_single():
     results = []
     for entry in data[:1]:  # only process the first row
         location = entry.get("location", "")
-        population = entry.get("result", "")
+        population = entry.get("population", "")
         prompt = f"Location: {location}\nPopulation: {population}"
         gpt_result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
         results.append({
-            "prompt": prompt,
-            "output": gpt_result,
+            "location": location,
+            "raw_data": gpt_result,
         })
 
     return jsonify({"results": results})
@@ -45,7 +45,7 @@ def process_single():
 
 @parse_locations_bp.route("/parse_locations/process_all", methods=["POST"])
 def process_all():
-    """Process rows until population falls below the stop depth or max depth reached."""
+    """Query all rows and return raw GPT output for each location."""
     payload = request.json or {}
     instructions = payload.get("instructions", "")
     data = payload.get("data", [])
@@ -53,28 +53,12 @@ def process_all():
     results = []
     for entry in data:
         location = entry.get("location", "")
-        population = int(entry.get("result", 0))
-        population_stop_depth = int(entry.get("population_stop_depth", 0))
-
-        current_population = population
-        loop_depth = 1
-        while loop_depth <= 5 and current_population > population_stop_depth:
-            prompt = (
-                f"Location: {location}\n"
-                f"Population: {current_population}\n"
-                f"Population Stop Depth: {population_stop_depth}\n"
-                f"Test Loop Depth: {loop_depth}"
-            )
-            gpt_result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
-            try:
-                current_population = int(gpt_result)
-            except (ValueError, TypeError):
-                break
-            loop_depth += 1
-
+        population = entry.get("population", "")
+        prompt = f"Location: {location}\nPopulation: {population}"
+        gpt_result = call_openai(instructions, prompt, model="gpt-3.5-turbo")
         results.append({
             "location": location,
-            "population": current_population,
+            "raw_data": gpt_result,
         })
 
     return jsonify({"results": results})
