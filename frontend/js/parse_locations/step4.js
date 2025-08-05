@@ -48,7 +48,7 @@ function gatherStep3Rows() {
 
 async function processRecursive() {
     const depth = parseInt($('#population-stop-depth').val(), 10) || 0;
-    const instructions = $('#gpt-instructions-step2').val();
+    const instructions = window.DEFAULT_INSTRUCTIONS;
     const initialRows = gatherStep3Rows();
     if (initialRows.length === 0) {
         alert('No data to process.');
@@ -102,6 +102,7 @@ async function processRecursive() {
                         if (newRow.population < depth) {
                             step4Results.push(newRow);
                         } else {
+                            removeRowFromTable(newRow);
                             queue.push(newRow);
                         }
                     });

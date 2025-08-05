@@ -1,6 +1,7 @@
 console.log('step2.js loaded');
 
 const DEFAULT_INSTRUCTIONS = "divide up the given location into common sub-areas and get the population of the sub locations.\n\n**only return sub-areas with populations more than 50,000\n\nReturn the result as a valid JSON object. Keys must be sub-area names. Values must be integer population counts.\n\nDO NOT return any explanation, description, or formatting outside the JSON.";
+window.DEFAULT_INSTRUCTIONS = DEFAULT_INSTRUCTIONS;
 
 let step2Results = [];
 
@@ -27,19 +28,16 @@ function renderResults(results, replace = false) {
 }
 
 $(document).ready(function () {
+    $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS).prop('readonly', true);
     const saved = localStorage.getItem('parse_locations_step2');
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            $('#gpt-instructions-step2').val(data.instructions || DEFAULT_INSTRUCTIONS);
             step2Results = data.results || [];
             renderResults(step2Results, true);
         } catch (e) {
             console.error(e);
-            $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
         }
-    } else {
-        $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
     }
 
     function gatherRows() {
@@ -57,7 +55,7 @@ $(document).ready(function () {
     }
 
     $('#process-single').on('click', function () {
-        const instructions = $('#gpt-instructions-step2').val();
+        const instructions = DEFAULT_INSTRUCTIONS;
 
         const rows = gatherRows();
         if (rows.length === 0) {
@@ -88,7 +86,6 @@ $(document).ready(function () {
 
     $('#save-step2').on('click', function () {
         localStorage.setItem('parse_locations_step2', JSON.stringify({
-            instructions: $('#gpt-instructions-step2').val(),
             results: step2Results,
         }));
     });
