@@ -1,5 +1,7 @@
 console.log('step2.js loaded');
 
+const DEFAULT_INSTRUCTIONS = "divide up the given location into common sub-areas and get the population of the sub locations.\n\n**only return sub-areas with populations more than 50,000\n\nReturn the result as a valid JSON object. Keys must be sub-area names. Values must be integer population counts.\n\nDO NOT return any explanation, description, or formatting outside the JSON.";
+
 let step2Results = [];
 
 function renderResults(results, replace = false) {
@@ -29,12 +31,15 @@ $(document).ready(function () {
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            $('#gpt-instructions-step2').val(data.instructions || '');
+            $('#gpt-instructions-step2').val(data.instructions || DEFAULT_INSTRUCTIONS);
             step2Results = data.results || [];
             renderResults(step2Results, true);
         } catch (e) {
             console.error(e);
+            $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
         }
+    } else {
+        $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
     }
 
     function gatherRows() {
@@ -81,32 +86,6 @@ $(document).ready(function () {
         });
     });
 
-    $('#process-all').on('click', function () {
-        const instructions = $('#gpt-instructions-step2').val();
-        const rows = gatherRows();
-        if (rows.length === 0) {
-            alert('No data to process.');
-            return;
-        }
-
-        $.ajax({
-            url: '/parse_locations/process_all',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                instructions: instructions,
-                data: rows,
-            }),
-            success: function (data) {
-                step2Results = data.results || [];
-                renderResults(step2Results, true);
-            },
-            error: function (xhr) {
-                alert(xhr.responseText);
-            },
-        });
-    });
-
     $('#save-step2').on('click', function () {
         localStorage.setItem('parse_locations_step2', JSON.stringify({
             instructions: $('#gpt-instructions-step2').val(),
@@ -118,6 +97,7 @@ $(document).ready(function () {
         $('#step2-results-table').remove();
         step2Results = [];
         localStorage.removeItem('parse_locations_step2');
+        $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
     });
 });
 

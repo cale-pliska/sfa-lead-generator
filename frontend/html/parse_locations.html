@@ -29,7 +29,6 @@
     <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50"></textarea><br><br>
 
     <button id="process-single">Process Single</button>
-    <button id="process-all">Process All</button>
     <button type="button" id="save-step2">Save Step 2</button>
     <button type="button" id="clear-step2">Clear Step 2</button>
 
@@ -44,8 +43,17 @@
     <div id="step3-results-container"></div>
 </div>
 
+<div id="step4">
+    <h2>STEP 4: Recursive Search</h2>
+    <label for="population-stop-depth">Population Stop Depth:</label><br>
+    <input type="number" id="population-stop-depth" value="100000"><br><br>
+    <button id="process-recursive">PROCESS ALL</button>
+    <div id="step4-results-container"></div>
+</div>
+
 <script src="{{ url_for('static', filename='parse_locations/step1.js') }}"></script>
 <script src="{{ url_for('static', filename='parse_locations/step2.js') }}"></script>
 <script src="{{ url_for('static', filename='parse_locations/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='parse_locations/step4.js') }}"></script>
 </body>
 </html>
