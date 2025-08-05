@@ -1,6 +1,39 @@
 console.log('step3.js loaded');
 
+let step3Results = [];
+
+function renderTable(rows, replace = false) {
+    let table = $('#step3-results-table');
+    if (table.length === 0) {
+        table = $('<table id="step3-results-table" border="1"></table>');
+        const header = $('<tr></tr>');
+        header.append('<th>Location</th>');
+        header.append('<th>Population</th>');
+        table.append(header);
+        $('#step3-results-container').append(table);
+    }
+    if (replace) {
+        table.find('tr:gt(0)').remove();
+    }
+    rows.forEach(function (item) {
+        const row = $('<tr></tr>');
+        row.append($('<td></td>').text(item.location));
+        row.append($('<td></td>').text(item.population));
+        table.append(row);
+    });
+}
+
 $(document).ready(function () {
+    const saved = localStorage.getItem('parse_locations_step3');
+    if (saved) {
+        try {
+            step3Results = JSON.parse(saved) || [];
+            renderTable(step3Results, true);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     $('#parse-data').on('click', function () {
         const rows = [];
 
@@ -9,9 +42,7 @@ $(document).ready(function () {
             const baseLocation = $(this).find('td').eq(0).text().trim();
             let rawData = $(this).find('td').eq(1).text();
 
-            // Remove code block markers
             rawData = rawData.replace(/```json|```/g, '').trim();
-            // Remove block comments
             rawData = rawData.replace(/\/\*[\s\S]*?\*\//g, '');
 
             try {
@@ -32,24 +63,18 @@ $(document).ready(function () {
             return;
         }
 
-        let table = $('#step3-results-table');
-        if (table.length === 0) {
-            table = $('<table id="step3-results-table" border="1"></table>');
-            const header = $('<tr></tr>');
-            header.append('<th>Location</th>');
-            header.append('<th>Population</th>');
-            table.append(header);
-            $('#step3-results-container').append(table);
-        } else {
-            table.find('tr:gt(0)').remove();
-        }
+        step3Results = rows;
+        renderTable(step3Results, true);
+    });
 
-        rows.forEach(function (item) {
-            const row = $('<tr></tr>');
-            row.append($('<td></td>').text(item.location));
-            row.append($('<td></td>').text(item.population));
-            table.append(row);
-        });
+    $('#save-step3').on('click', function () {
+        localStorage.setItem('parse_locations_step3', JSON.stringify(step3Results));
+    });
+
+    $('#clear-step3').on('click', function () {
+        $('#step3-results-table').remove();
+        step3Results = [];
+        localStorage.removeItem('parse_locations_step3');
     });
 });
 
