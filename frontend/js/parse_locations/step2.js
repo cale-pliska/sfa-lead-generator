@@ -39,7 +39,7 @@ $(document).ready(function () {
 
     function gatherRows() {
         const rows = [];
-        $('#results-table tr').each(function (index) {
+        $('#step1-results-table tr').each(function (index) {
             if (index === 0) return; // skip header
             const location = $(this).find('td').eq(0).text();
             const population = $(this).find('td').eq(1).text();

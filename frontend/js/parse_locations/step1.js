@@ -1,14 +1,14 @@
 console.log('step1.js loaded');
 
 function renderTable(rows, replace = false) {
-    let table = $('#results-table');
+    let table = $('#step1-results-table');
     if (table.length === 0) {
-        table = $('<table id="results-table" border="1"></table>');
+        table = $('<table id="step1-results-table" border="1"></table>');
         const header = $('<tr></tr>');
         header.append('<th>Location</th>');
         header.append('<th>Population</th>');
         table.append(header);
-        $('#results-container').append(table);
+        $('#step1-results-container').append(table);
     }
     if (replace) {
         table.find('tr:gt(0)').remove();
@@ -57,7 +57,7 @@ $(document).ready(function () {
 
     $('#save-step1').on('click', function () {
         const rows = [];
-        $('#results-table tr').each(function (index) {
+        $('#step1-results-table tr').each(function (index) {
             if (index === 0) return;
             rows.push({
                 location: $(this).find('td').eq(0).text(),
@@ -68,7 +68,7 @@ $(document).ready(function () {
     });
 
     $('#clear-step1').on('click', function () {
-        $('#results-table').remove();
+        $('#step1-results-table').remove();
         localStorage.removeItem('parse_locations_step1');
     });
 });
