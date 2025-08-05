@@ -1,6 +1,6 @@
 console.log('step1.js loaded');
 
-function renderTable(rows, replace = false) {
+function renderStep1Table(rows, replace = false) {
     let table = $('#step1-results-table');
     if (table.length === 0) {
         table = $('<table id="step1-results-table" border="1"></table>');
@@ -26,7 +26,7 @@ $(document).ready(function () {
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            renderTable(data, true);
+            renderStep1Table(data, true);
         } catch (e) {
             console.error(e);
         }
@@ -47,7 +47,7 @@ $(document).ready(function () {
             success: function (data) {
                 const population = data.population;
                 const locationName = data.location_name;
-                renderTable([{ location: locationName, population: population }]);
+                renderStep1Table([{ location: locationName, population: population }]);
             },
             error: function (xhr) {
                 alert(xhr.responseText);

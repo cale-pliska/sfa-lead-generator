@@ -2,7 +2,7 @@ console.log('step3.js loaded');
 
 let step3Results = [];
 
-function renderTable(rows, replace = false) {
+function renderStep3Table(rows, replace = false) {
     let table = $('#step3-results-table');
     if (table.length === 0) {
         table = $('<table id="step3-results-table" border="1"></table>');
@@ -28,7 +28,7 @@ $(document).ready(function () {
     if (saved) {
         try {
             step3Results = JSON.parse(saved) || [];
-            renderTable(step3Results, true);
+            renderStep3Table(step3Results, true);
         } catch (e) {
             console.error(e);
         }
@@ -64,7 +64,7 @@ $(document).ready(function () {
         }
 
         step3Results = rows;
-        renderTable(step3Results, true);
+        renderStep3Table(step3Results, true);
     });
 
     $('#save-step3').on('click', function () {
