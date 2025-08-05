@@ -23,6 +23,18 @@ function renderStep4Table(rows, replace = false) {
     });
 }
 
+function removeRowFromTable(row) {
+    $('#step4-results-table tr').each(function (index) {
+        if (index === 0) return; // skip header
+        const location = $(this).find('td').eq(0).text();
+        const population = parseInt($(this).find('td').eq(1).text(), 10);
+        if (location === row.location && population === row.population) {
+            $(this).remove();
+            return false;
+        }
+    });
+}
+
 function gatherStep3Rows() {
     const rows = [];
     $('#step3-results-table tr').each(function (index) {
@@ -37,17 +49,33 @@ function gatherStep3Rows() {
 async function processRecursive() {
     const depth = parseInt($('#population-stop-depth').val(), 10) || 0;
     const instructions = $('#gpt-instructions-step2').val();
-    const rows = gatherStep3Rows();
-    if (rows.length === 0) {
+    const initialRows = gatherStep3Rows();
+    if (initialRows.length === 0) {
         alert('No data to process.');
         return;
     }
-    for (const row of rows) {
+
+    const startTime = Date.now();
+    const queue = [];
+
+    initialRows.forEach(function (row) {
         if (row.population < depth) {
             step4Results.push(row);
             renderStep4Table([row]);
-            continue;
+        } else {
+            queue.push(row);
         }
+    });
+
+    while (queue.length > 0) {
+        if (Date.now() - startTime > 240000) {
+            alert('Process reached the 4 min timeout limit.');
+            return;
+        }
+
+        const row = queue.shift();
+        removeRowFromTable(row);
+
         try {
             const response = await $.ajax({
                 url: '/parse_locations/process_single',
@@ -66,9 +94,16 @@ async function processRecursive() {
                 try {
                     const obj = JSON.parse(rawData);
                     Object.entries(obj).forEach(function ([key, value]) {
-                        const newRow = { location: row.location + ' ' + key, population: value };
-                        step4Results.push(newRow);
+                        const newRow = {
+                            location: row.location + ' ' + key,
+                            population: parseInt(value, 10),
+                        };
                         renderStep4Table([newRow]);
+                        if (newRow.population < depth) {
+                            step4Results.push(newRow);
+                        } else {
+                            queue.push(newRow);
+                        }
                     });
                 } catch (e) {
                     console.error('Failed to parse JSON for', row.location, e);
@@ -85,5 +120,10 @@ $(document).ready(function () {
         $('#step4-results-table').remove();
         step4Results = [];
         await processRecursive();
+    });
+
+    $('#clear-step4').on('click', function () {
+        $('#step4-results-table').remove();
+        step4Results = [];
     });
 });
