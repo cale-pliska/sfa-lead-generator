@@ -1,9 +1,45 @@
 console.log('step2.js loaded');
 
+let step2Results = [];
+
+function renderResults(results, replace = false) {
+    let table = $('#step2-results-table');
+    if (table.length === 0) {
+        table = $('<table id="step2-results-table" border="1"></table>');
+        const header = $('<tr></tr>');
+        header.append('<th>Location</th>');
+        header.append('<th>Raw Data</th>');
+        table.append(header);
+        $('#step2-results-container').append(table);
+    }
+    if (replace) {
+        table.find('tr:gt(0)').remove();
+    }
+    results.forEach(function (item) {
+        const row = $('<tr></tr>');
+        row.append($('<td></td>').text(item.location));
+        const outputCell = $('<td></td>').html((item.raw_data || '').replace(/\n/g, '<br>'));
+        row.append(outputCell);
+        table.append(row);
+    });
+}
+
 $(document).ready(function () {
+    const saved = localStorage.getItem('parse_locations_step2');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            $('#gpt-instructions-step2').val(data.instructions || '');
+            step2Results = data.results || [];
+            renderResults(step2Results, true);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     function gatherRows() {
         const rows = [];
-        $('#results-table tr').each(function (index) {
+        $('#step1-results-table tr').each(function (index) {
             if (index === 0) return; // skip header
             const location = $(this).find('td').eq(0).text();
             const population = $(this).find('td').eq(1).text();
@@ -13,26 +49,6 @@ $(document).ready(function () {
             });
         });
         return rows;
-    }
-
-    function renderResults(results) {
-        let table = $('#step2-results-table');
-        if (table.length === 0) {
-            table = $('<table id="step2-results-table" border="1"></table>');
-            const header = $('<tr></tr>');
-            header.append('<th>Location</th>');
-            header.append('<th>Raw Data</th>');
-            table.append(header);
-            $('#step2-results-container').append(table);
-        }
-
-        results.forEach(function (item) {
-            const row = $('<tr></tr>');
-            row.append($('<td></td>').text(item.location));
-            const outputCell = $('<td></td>').html((item.raw_data || '').replace(/\n/g, '<br>'));
-            row.append(outputCell);
-            table.append(row);
-        });
     }
 
     $('#process-single').on('click', function () {
@@ -55,7 +71,9 @@ $(document).ready(function () {
                 data: [row],
             }),
             success: function (data) {
-                renderResults(data.results || []);
+                const res = data.results || [];
+                step2Results = step2Results.concat(res);
+                renderResults(res);
             },
             error: function (xhr) {
                 alert(xhr.responseText);
@@ -80,11 +98,26 @@ $(document).ready(function () {
                 data: rows,
             }),
             success: function (data) {
-                renderResults(data.results || []);
+                step2Results = data.results || [];
+                renderResults(step2Results, true);
             },
             error: function (xhr) {
                 alert(xhr.responseText);
             },
         });
     });
+
+    $('#save-step2').on('click', function () {
+        localStorage.setItem('parse_locations_step2', JSON.stringify({
+            instructions: $('#gpt-instructions-step2').val(),
+            results: step2Results,
+        }));
+    });
+
+    $('#clear-step2').on('click', function () {
+        $('#step2-results-table').remove();
+        step2Results = [];
+        localStorage.removeItem('parse_locations_step2');
+    });
 });
+
