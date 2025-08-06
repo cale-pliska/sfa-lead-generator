@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify, render_template, request
 from ..utilities.openai_helpers import call_openai
 
 
-parse_locations_bp = Blueprint("parse_locations", __name__)
+parse_locations_step1_bp = Blueprint("parse_locations_step1", __name__)
 
 
 # ---------------------------------------------------------------------------
@@ -71,13 +71,13 @@ def _process_entry(instructions: str, entry: Dict[str, str]) -> Dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-@parse_locations_bp.route("/parse_locations")
+@parse_locations_step1_bp.route("/parse_locations")
 def parse_locations() -> str:
     """Render the parse locations page."""
     return render_template("parse_locations.html")
 
 
-@parse_locations_bp.route("/parse_locations/run_instructions", methods=["POST"])
+@parse_locations_step1_bp.route("/parse_locations/run_instructions", methods=["POST"])
 def run_instructions():
     """Look up the population for a location using a fixed GPT prompt."""
     payload = request.json or {}
@@ -86,7 +86,7 @@ def run_instructions():
     return jsonify({"location_name": location, "population": population})
 
 
-@parse_locations_bp.route("/parse_locations/process_single", methods=["POST"])
+@parse_locations_step1_bp.route("/parse_locations/process_single", methods=["POST"])
 def process_single():
     """Query a single location and capture the raw GPT output."""
     payload = request.json or {}
@@ -96,7 +96,7 @@ def process_single():
     return jsonify({"results": results})
 
 
-@parse_locations_bp.route("/parse_locations/process_all", methods=["POST"])
+@parse_locations_step1_bp.route("/parse_locations/process_all", methods=["POST"])
 def process_all():
     """Query all rows and return raw GPT output for each location."""
     payload = request.json or {}
