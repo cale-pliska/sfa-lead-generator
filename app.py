@@ -4,7 +4,12 @@ from dotenv import load_dotenv
 import openai
 
 from backend.generate_contacts import step1_bp, step2_bp, step3_bp
-from backend.parse_locations import parse_locations_bp
+from backend.parse_locations import (
+    step1_bp as parse_step1_bp,
+    step2_bp as parse_step2_bp,
+    step3_bp as parse_step3_bp,
+    step4_bp as parse_step4_bp,
+)
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -17,7 +22,10 @@ def create_app():
     app.register_blueprint(step1_bp)
     app.register_blueprint(step2_bp)
     app.register_blueprint(step3_bp)
-    app.register_blueprint(parse_locations_bp)
+    app.register_blueprint(parse_step1_bp)
+    app.register_blueprint(parse_step2_bp)
+    app.register_blueprint(parse_step3_bp)
+    app.register_blueprint(parse_step4_bp)
 
     return app
 
