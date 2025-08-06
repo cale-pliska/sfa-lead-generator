@@ -106,6 +106,39 @@ $("#process-single-btn").on("click", function () {
 });
 
 $(document).ready(function () {
+  var defaultInstructions = `You are a contact generation expert for sales.
+
+For the business provided, find all key contacts. Prioritize:  
+– Founders  
+– COOs  
+– Heads of Operations  
+– Other senior decision-makers  
+
+Required output format:  
+Return results as a JSON array of objects.  
+Each object must contain:  
+- firstname  
+- lastname  
+- role
+- email (if you can't find their email directly guess it)
+
+⚠️ Do not include company name, emails, or any extra explanation.  
+⚠️ Output only the raw JSON.
+
+Example input:  
+ABC Company
+
+Example output:
+[
+  { "firstname": "John", "lastname": "Smith", "role": "Founder", "email": "john.smith@abccompany.com" },
+  { "firstname": "Jane", "lastname": "Doe", "role": "COO", "email": "jane.doe@abccompany.com" },
+  { "firstname": "Michael", "lastname": "Johnson", "role": "Head of Operations", "email": "michael.johnson@abccompany.com" },
+  { "firstname": "Ryan", "lastname": "Patel", "role": "Founder", "email": "ryan.patel@abccompany.com" },
+  { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
+  { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
+]`;
+  $("#instructions").val(defaultInstructions);
+
   var saved = localStorage.getItem("saved_results");
   if (saved) {
     try {
