@@ -1,6 +1,6 @@
 console.log('step2.js loaded');
 
-const DEFAULT_INSTRUCTIONS = "divide up the given location into common sub-areas and get the population of the sub locations.\n\n**only return sub-areas with populations more than 50,000\n\nReturn the result as a valid JSON object. Keys must be sub-area names. Values must be integer population counts.\n\nDO NOT return any explanation, description, or formatting outside the JSON.";
+const DEFAULT_INSTRUCTIONS = "divide up the given location into common sub-areas and get the population of the sub locations.\n\nReturn the result as a valid JSON object. Keys must be sub-area names. Values must be integer population counts.\n\nDO NOT return any explanation, description, or formatting outside the JSON.";
 window.DEFAULT_INSTRUCTIONS = DEFAULT_INSTRUCTIONS;
 
 let step2Results = [];
