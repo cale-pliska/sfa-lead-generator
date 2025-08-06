@@ -106,7 +106,7 @@ $("#process-single-btn").on("click", function () {
 });
 
 $(document).ready(function () {
-  var defaultPrompt = `You are a contact generation expert for sales.  
+  var defaultInstructions = `You are a contact generation expert for sales.
 
 For the business provided, find all key contacts. Prioritize:  
 – Founders  
@@ -137,7 +137,7 @@ Example output:
   { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]`;
-  $("#prompt").val(defaultPrompt);
+  $("#instructions").val(defaultInstructions);
 
   var saved = localStorage.getItem("saved_results");
   if (saved) {
