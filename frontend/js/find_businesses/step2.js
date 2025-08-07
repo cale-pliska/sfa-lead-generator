@@ -106,37 +106,17 @@ function addOrUpdateResultRow(rowData, index) {
 });
 
 $(document).ready(function () {
-  var defaultInstructions = `You are a contact generation expert for sales.
+  var defaultInstructions = `You are a business finder expert for sales.
 
-For the business provided, find all key contacts. Prioritize:  
-– Founders  
-– COOs  
-– Heads of Operations  
-– Other senior decision-makers  
+  For the location provided, find all types of mortgage broker businesses. search like a CIA pro to find every business in the area.
 
-Required output format:  
+  Required output format:
 Return results as a JSON array of objects.  
 Each object must contain:  
-- firstname  
-- lastname  
-- role
-- email (if you can't find their email directly guess it)
+- business_name  
+- website
 
-⚠️ Do not include company name, emails, or any extra explanation.  
-⚠️ Output only the raw JSON.
-
-Example input:  
-ABC Company
-
-Example output:
-[
-  { "firstname": "John", "lastname": "Smith", "role": "Founder", "email": "john.smith@abccompany.com" },
-  { "firstname": "Jane", "lastname": "Doe", "role": "COO", "email": "jane.doe@abccompany.com" },
-  { "firstname": "Michael", "lastname": "Johnson", "role": "Head of Operations", "email": "michael.johnson@abccompany.com" },
-  { "firstname": "Ryan", "lastname": "Patel", "role": "Founder", "email": "ryan.patel@abccompany.com" },
-  { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
-  { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
-]`;
+DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#instructions").val(defaultInstructions);
 
   var saved = localStorage.getItem("saved_results");

@@ -1,20 +1,20 @@
-var parsedContacts = [];
+var parsedBusinesses = [];
 
 $(document).ready(function () {
-  var saved = localStorage.getItem("saved_contacts");
+  var saved = localStorage.getItem("saved_businesses");
   if (saved) {
     try {
-      parsedContacts = JSON.parse(saved);
-      renderContactsTable(parsedContacts);
+      parsedBusinesses = JSON.parse(saved);
+      renderBusinessesTable(parsedBusinesses);
     } catch (e) {
       console.error(e);
     }
   }
 });
 
-function renderContactsTable(data) {
+function renderBusinessesTable(data) {
   if (!data.length) {
-    $("#contacts-container").html("No contacts");
+    $("#contacts-container").html("No businesses");
     return;
   }
   var cols = Object.keys(data[0]);
@@ -44,14 +44,14 @@ $("#parse-btn").on("click", function () {
     alert("No Step 2 results to parse");
     return;
   }
-    $.ajax({
-      url: "/find_businesses/parse_contacts",
-      method: "POST",
+  $.ajax({
+    url: "/find_businesses/parse_contacts",
+    method: "POST",
     contentType: "application/json",
     data: JSON.stringify({ results: step2Results }),
     success: function (data) {
-      parsedContacts = data;
-      renderContactsTable(data);
+      parsedBusinesses = data;
+      renderBusinessesTable(data);
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -60,5 +60,5 @@ $("#parse-btn").on("click", function () {
 });
 
 $("#save-setup-btn").on("click", function () {
-  localStorage.setItem("saved_contacts", JSON.stringify(parsedContacts));
+  localStorage.setItem("saved_businesses", JSON.stringify(parsedBusinesses));
 });
