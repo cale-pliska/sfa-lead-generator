@@ -6,11 +6,12 @@
 </head>
 <body>
 <h1>SFA Lead Generator</h1>
-<nav>
-    <a href="{{ url_for('step1.index') }}">Home</a> |
-    <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
-    <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
-</nav>
+ <nav>
+     <a href="{{ url_for('step1.index') }}">Home</a> |
+     <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
+     <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
+     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+ </nav>
  <p>Welcome to SFA Lead Generator.</p>
 </body>
 </html>
