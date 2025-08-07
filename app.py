@@ -10,6 +10,11 @@ from backend.parse_locations import (
     step3_bp as parse_step3_bp,
     step4_bp as parse_step4_bp,
 )
+from backend.find_businesses import (
+    step1_bp as find_step1_bp,
+    step2_bp as find_step2_bp,
+    step3_bp as find_step3_bp,
+)
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -20,12 +25,15 @@ def create_app():
 
     # Register blueprints for each step of the UI
     app.register_blueprint(step1_bp)
-    app.register_blueprint(step2_bp)
-    app.register_blueprint(step3_bp)
     app.register_blueprint(parse_step1_bp)
     app.register_blueprint(parse_step2_bp)
     app.register_blueprint(parse_step3_bp)
     app.register_blueprint(parse_step4_bp)
+    app.register_blueprint(find_step1_bp)
+    app.register_blueprint(find_step2_bp)
+    app.register_blueprint(find_step3_bp)
+    app.register_blueprint(step2_bp)
+    app.register_blueprint(step3_bp)
 
     return app
 
