@@ -68,7 +68,7 @@ async function processRecursive() {
     });
 
     while (queue.length > 0) {
-        if (Date.now() - startTime > 240000) {
+        if (Date.now() - startTime > 60000) {
             alert('Process reached the 4 min timeout limit.');
             return;
         }
