@@ -31,8 +31,11 @@ def call_openai(
 
         extra_args: Dict[str, Any] = {}
         if "search" in model:
+            # Search models currently reject the ``temperature`` parameter.
+            # Skip including it while still enabling web search options.
             extra_args["web_search_options"] = {}
-        extra_args["temperature"] = temperature
+        else:
+            extra_args["temperature"] = temperature
         if response_format:
             extra_args["response_format"] = response_format
 
