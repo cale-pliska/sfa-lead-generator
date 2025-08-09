@@ -30,7 +30,7 @@
     </form>
 
 
-    <div id="table-container"></div>
+    <div id="table-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <div id="step2" style="margin-top:2em;">
@@ -46,14 +46,14 @@
         <button id="process-btn">Process All Rows</button>
         <button type="button" id="clear-step2">Clear Step 2</button>
     </div>
-    <div id="results-container" style="margin-top:1em;"></div>
+    <div id="results-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <div id="step3" style="margin-top:2em;">
     <h2>STEP 3: Parse Contacts</h2>
     <button id="parse-btn">Parse Step 2 Results</button>
     <button type="button" id="clear-step3">Clear Step 3</button>
-    <div id="contacts-container" style="margin-top:1em;"></div>
+    <div id="contacts-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <script src="{{ url_for('static', filename='generate_contacts/step1.js') }}"></script>

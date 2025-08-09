@@ -26,7 +26,7 @@
         <button type="button" id="clear-step1">Clear Step 1</button>
     </form>
 
-    <div id="step1-results-container"></div>
+    <div id="step1-results-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <div id="step2">
@@ -38,7 +38,7 @@
     <button type="button" id="save-step2">Save Step 2</button>
     <button type="button" id="clear-step2">Clear Step 2</button>
 
-    <div id="step2-results-container"></div>
+    <div id="step2-results-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <div id="step3">
@@ -46,7 +46,7 @@
     <button id="parse-data">Parse Data</button>
     <button type="button" id="save-step3">Save Step 3</button>
     <button type="button" id="clear-step3">Clear Step 3</button>
-    <div id="step3-results-container"></div>
+    <div id="step3-results-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <div id="step4">
@@ -55,7 +55,7 @@
     <input type="number" id="population-stop-depth" value="100000"><br><br>
     <button id="process-recursive">PROCESS ALL</button>
     <button type="button" id="clear-step4">Clear Step 4</button>
-    <div id="step4-results-container"></div>
+    <div id="step4-results-container" style="margin-top:1em; max-height:300px; overflow-y:auto;"></div>
 </div>
 
 <script src="{{ url_for('static', filename='parse_locations/step1.js') }}"></script>
