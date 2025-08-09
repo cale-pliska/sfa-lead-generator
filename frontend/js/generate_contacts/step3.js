@@ -63,3 +63,9 @@ $("#parse-btn").on("click", function () {
 $("#save-setup-btn").on("click", function () {
   localStorage.setItem("saved_contacts", JSON.stringify(parsedContacts));
 });
+
+$("#clear-step3").on("click", function () {
+  $("#contacts-container").empty();
+  parsedContacts = [];
+  localStorage.removeItem("saved_contacts");
+});
