@@ -65,6 +65,7 @@ $(document).ready(function () {
 
         step3Results = rows;
         renderStep3Table(step3Results, true);
+        localStorage.setItem('parse_locations_step3', JSON.stringify(step3Results));
     });
 
     $('#save-step3').on('click', function () {
