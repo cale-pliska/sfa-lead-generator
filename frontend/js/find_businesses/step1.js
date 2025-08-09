@@ -70,6 +70,16 @@ $("#save-setup-btn").on("click", function () {
   localStorage.setItem("saved_prompt", $("#prompt").val());
 });
 
+$("#clear-step1").on("click", function () {
+  $("#tsv-input").val("");
+  $("#instructions").val("");
+  $("#prompt").val("");
+  $("#table-container").empty();
+  localStorage.removeItem("saved_tsv");
+  localStorage.removeItem("saved_instructions");
+  localStorage.removeItem("saved_prompt");
+});
+
 function renderDataTable(data) {
   if (!data.length) {
     $("#table-container").html("No rows");
