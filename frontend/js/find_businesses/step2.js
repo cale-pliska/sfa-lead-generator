@@ -1,5 +1,9 @@
 var step2Results = [];
 var activeRequest = null;
+var isProcessingRange = false;
+var rangeQueue = [];
+var retryCounts = {};
+var requestDelay = 300; // ms delay between row requests
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -81,36 +85,61 @@ function renderResultsTable(data) {
     var instructions = $("#instructions").val();
     var startIndex = parseInt($("#start-index").val()) || 0;
     var endIndex = parseInt($("#end-index").val()) || startIndex;
-    activeRequest = $.ajax({
-      url: "/find_businesses/process_range",
-      method: "POST",
-      contentType: "application/json",
-      data: JSON.stringify({
-        prompt: prompt,
-        instructions: instructions,
-        start_index: startIndex,
-        end_index: endIndex,
-      }),
-      success: function (data) {
-        data.forEach(function (row) {
-          step2Results[row.index] = row;
-        });
-        renderResultsTable(step2Results);
-        $("#raw-output").text(JSON.stringify(data, null, 2));
-        localStorage.setItem("saved_results", JSON.stringify(step2Results));
-      },
-      error: function (xhr, textStatus) {
-        if (textStatus !== "abort") {
-          alert(xhr.responseText);
-        }
-      },
-      complete: function () {
+
+    rangeQueue = [];
+    for (var i = startIndex; i <= endIndex; i++) {
+      rangeQueue.push(i);
+    }
+    isProcessingRange = true;
+
+    function processNext() {
+      if (!isProcessingRange || rangeQueue.length === 0) {
+        isProcessingRange = false;
         activeRequest = null;
-      },
-    });
+        return;
+      }
+      var rowIndex = rangeQueue.shift();
+
+      activeRequest = $.ajax({
+        url: "/find_businesses/process_single",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          prompt: prompt,
+          instructions: instructions,
+          row_index: rowIndex,
+        }),
+        success: function (data) {
+          step2Results[rowIndex] = data;
+          renderResultsTable(step2Results);
+          $("#raw-output").text(JSON.stringify(data, null, 2));
+          localStorage.setItem("saved_results", JSON.stringify(step2Results));
+          retryCounts[rowIndex] = 0;
+        },
+        error: function (xhr, textStatus) {
+          if (textStatus !== "abort") {
+            console.error("Error processing row " + rowIndex + ":", xhr.responseText);
+            retryCounts[rowIndex] = (retryCounts[rowIndex] || 0) + 1;
+            if (retryCounts[rowIndex] <= 1) {
+              rangeQueue.unshift(rowIndex);
+            }
+          }
+        },
+        complete: function () {
+          activeRequest = null;
+          if (isProcessingRange) {
+            setTimeout(processNext, requestDelay);
+          }
+        },
+      });
+    }
+
+    processNext();
   });
 
   $("#stop-execution-btn").on("click", function () {
+    isProcessingRange = false;
+    rangeQueue = [];
     if (activeRequest) {
       activeRequest.abort();
       activeRequest = null;
