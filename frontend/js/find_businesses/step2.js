@@ -44,22 +44,6 @@ function renderResultsTable(resultsObj) {
   $("#results-container").html(html);
 }
 
-function updateRawOutput(rowIndex, data) {
-  var container = $("#raw-output-container");
-  var entryId = "raw-row-" + rowIndex;
-  var $entry = $("#" + entryId);
-  var pre = $("<pre></pre>").text(JSON.stringify(data, null, 2));
-  if ($entry.length) {
-    $entry.find("pre").replaceWith(pre);
-  } else {
-    var wrapper = $("<div></div>")
-      .attr("id", entryId)
-      .append("<h4>Row " + rowIndex + "</h4>")
-      .append(pre);
-    container.append(wrapper);
-  }
-}
-
 $("#process-range-btn").on("click", function () {
   var prompt = $("#prompt").val();
   var instructions = $("#instructions").val();
@@ -91,7 +75,6 @@ $("#process-range-btn").on("click", function () {
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
-          updateRawOutput(idx, data);
           localStorage.setItem("saved_results", JSON.stringify(step2Results));
           setTimeout(function () {
             processNext(pos + 1);
@@ -133,7 +116,6 @@ $("#process-single-btn").on("click", function () {
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
-      updateRawOutput(rowIndex, data);
       localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
@@ -171,9 +153,6 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
     try {
       step2Results = JSON.parse(saved);
       renderResultsTable(step2Results);
-      Object.keys(step2Results).forEach(function (idx) {
-        updateRawOutput(idx, step2Results[idx]);
-      });
     } catch (e) {
       console.error(e);
     }
@@ -182,7 +161,6 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#clear-step2").on("click", function () {
     step2Results = {};
     $("#results-container").empty();
-    $("#raw-output-container").empty();
     $("#prompt").val(defaultPrompt);
     $("#instructions").val(defaultInstructions);
     localStorage.removeItem("saved_results");
