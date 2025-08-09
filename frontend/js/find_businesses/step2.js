@@ -75,6 +75,7 @@ function addOrUpdateResultRow(rowData, index) {
       console.log("Raw data from backend:", data);
       step2Results = data;
       renderResultsTable(data);
+      localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -98,14 +99,15 @@ function addOrUpdateResultRow(rowData, index) {
     success: function (data) {
       step2Results[rowIndex] = data;
       addOrUpdateResultRow(data, rowIndex);
+      localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
     },
   });
-});
+  });
 
-$(document).ready(function () {
+  $(document).ready(function () {
   var defaultInstructions = `You are a business finder expert for sales.
 
   For the location provided, find all types of mortgage broker businesses. search like a CIA pro to find every business in the area.
@@ -118,6 +120,15 @@ Each object must contain:
 
 DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#instructions").val(defaultInstructions);
+  var savedPrompt = localStorage.getItem("find_businesses_step2_prompt");
+  if (savedPrompt && savedPrompt.trim() !== "") {
+    $("#prompt").val(savedPrompt);
+  } else {
+    $("#prompt").val("{Locations}");
+  }
+  $("#prompt").on("input", function () {
+    localStorage.setItem("find_businesses_step2_prompt", $(this).val());
+  });
 
   var saved = localStorage.getItem("saved_results");
   if (saved) {
@@ -130,6 +141,7 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   }
 });
 
-$("#save-setup-btn").on("click", function () {
+$(window).on("beforeunload", function () {
+  localStorage.setItem("find_businesses_step2_prompt", $("#prompt").val());
   localStorage.setItem("saved_results", JSON.stringify(step2Results));
 });
