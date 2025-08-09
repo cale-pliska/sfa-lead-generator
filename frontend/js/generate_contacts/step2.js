@@ -140,11 +140,12 @@ Example output:
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]`;
   $("#instructions").val(defaultInstructions);
+  var defaultPrompt = "{Business_Name}";
   var savedPrompt = localStorage.getItem("generate_contacts_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
   } else {
-    $("#prompt").val("{Business_Name}");
+    $("#prompt").val(defaultPrompt);
   }
   $("#prompt").on("input", function () {
     localStorage.setItem("generate_contacts_step2_prompt", $(this).val());
@@ -159,6 +160,15 @@ Example output:
       console.error(e);
     }
   }
+
+  $("#clear-step2").on("click", function () {
+    step2Results = [];
+    $("#results-container").empty();
+    $("#prompt").val(defaultPrompt);
+    $("#instructions").val(defaultInstructions);
+    localStorage.removeItem("saved_results");
+    localStorage.removeItem("generate_contacts_step2_prompt");
+  });
 });
 
 $(window).on("beforeunload", function () {

@@ -107,24 +107,25 @@ function addOrUpdateResultRow(rowData, index) {
   });
   });
 
-  $(document).ready(function () {
+$(document).ready(function () {
   var defaultInstructions = `You are a business finder expert for sales.
 
   For the location provided, find all types of mortgage broker businesses. search like a CIA pro to find every business in the area.
 
   Required output format:
-Return results as a JSON array of objects.  
-Each object must contain:  
-- business_name  
+Return results as a JSON array of objects.
+Each object must contain:
+- business_name
 - website
 
 DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#instructions").val(defaultInstructions);
+  var defaultPrompt = "{Locations}";
   var savedPrompt = localStorage.getItem("find_businesses_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
   } else {
-    $("#prompt").val("{Locations}");
+    $("#prompt").val(defaultPrompt);
   }
   $("#prompt").on("input", function () {
     localStorage.setItem("find_businesses_step2_prompt", $(this).val());
@@ -139,6 +140,15 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
       console.error(e);
     }
   }
+
+  $("#clear-step2").on("click", function () {
+    step2Results = [];
+    $("#results-container").empty();
+    $("#prompt").val(defaultPrompt);
+    $("#instructions").val(defaultInstructions);
+    localStorage.removeItem("saved_results");
+    localStorage.removeItem("find_businesses_step2_prompt");
+  });
 });
 
 $(window).on("beforeunload", function () {
