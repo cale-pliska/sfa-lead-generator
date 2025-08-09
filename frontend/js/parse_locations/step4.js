@@ -55,7 +55,6 @@ async function processRecursive() {
         return;
     }
 
-    const startTime = Date.now();
     const queue = [];
 
     initialRows.forEach(function (row) {
@@ -68,11 +67,6 @@ async function processRecursive() {
     });
 
     while (queue.length > 0) {
-        if (Date.now() - startTime > 60000) {
-            alert('Process reached the 4 min timeout limit.');
-            return;
-        }
-
         const row = queue.shift();
         removeRowFromTable(row);
 
