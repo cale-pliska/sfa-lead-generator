@@ -50,8 +50,9 @@ $("#parse-btn").on("click", function () {
     contentType: "application/json",
     data: JSON.stringify({ results: step2Results }),
     success: function (data) {
-      parsedContacts = data;
-      renderContactsTable(data);
+      parsedContacts = parsedContacts.concat(data);
+      renderContactsTable(parsedContacts);
+      localStorage.setItem("saved_contacts", JSON.stringify(parsedContacts));
     },
     error: function (xhr) {
       alert(xhr.responseText);

@@ -50,8 +50,9 @@ $("#parse-btn").on("click", function () {
     contentType: "application/json",
     data: JSON.stringify({ results: step2Results }),
     success: function (data) {
-      parsedBusinesses = data;
-      renderBusinessesTable(data);
+      parsedBusinesses = parsedBusinesses.concat(data);
+      renderBusinessesTable(parsedBusinesses);
+      localStorage.setItem("saved_businesses", JSON.stringify(parsedBusinesses));
     },
     error: function (xhr) {
       alert(xhr.responseText);
