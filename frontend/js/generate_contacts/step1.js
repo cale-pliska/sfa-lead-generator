@@ -33,8 +33,16 @@ function autoPopulateFromSaved() {
   }
 }
 
+function autoSave() {
+  localStorage.setItem("saved_tsv", $("#tsv-input").val());
+  localStorage.setItem("saved_instructions", $("#instructions").val());
+  localStorage.setItem("saved_prompt", $("#prompt").val());
+}
+
 $(document).ready(function () {
   autoPopulateFromSaved();
+  $("#tsv-input, #instructions, #prompt").on("input", autoSave);
+  $(window).on("beforeunload", autoSave);
 });
 
 $("#upload-form").on("submit", function (e) {
@@ -48,6 +56,7 @@ $("#upload-form").on("submit", function (e) {
     contentType: false,
     success: function (data) {
       renderDataTable(JSON.parse(data));
+      autoSave();
     },
     error: function (xhr) {
       alert(xhr.responseText);
