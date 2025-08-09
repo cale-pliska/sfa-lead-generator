@@ -40,7 +40,7 @@ function renderBusinessesTable(data) {
 }
 
 $("#parse-btn").on("click", function () {
-  if (!step2Results.length) {
+  if (Object.keys(step2Results).length === 0) {
     alert("No Step 2 results to parse");
     return;
   }
@@ -48,7 +48,7 @@ $("#parse-btn").on("click", function () {
     url: "/find_businesses/parse_contacts",
     method: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ results: step2Results }),
+    data: JSON.stringify({ results: Object.values(step2Results) }),
     success: function (data) {
       parsedBusinesses = parsedBusinesses.concat(data);
       renderBusinessesTable(parsedBusinesses);

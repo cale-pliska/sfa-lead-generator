@@ -46,11 +46,19 @@
           <textarea id="prompt" style="height:100px;"></textarea><br>
         <label>Row index for single run:</label>
         <input type="number" id="row-index" value="0" min="0"><br>
+        <label>Start index:</label>
+        <input type="number" id="start-index" value="0" min="0">
+        <label>End index:</label>
+        <input type="number" id="end-index" value="0" min="0"><br>
         <button id="process-single-btn">Process Single Row</button>
-        <button id="process-btn">Process All Rows</button>
+        <button id="process-range-btn">Process Range</button>
         <button type="button" id="clear-step2">Clear Step 2</button>
     </div>
     <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
+    <div id="raw-output-section" style="margin-top:1em;">
+        <h3>Raw Output</h3>
+        <div id="raw-output-container" class="scrollable-output"></div>
+    </div>
 </div>
 
  <div id="step3" style="margin-top:2em;">
