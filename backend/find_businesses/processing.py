@@ -64,10 +64,10 @@ def parse_results_to_businesses(results):
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     """Apply the prompt to each row of the dataframe and return results."""
     processed = []
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         message = _format_prompt(prompt, row)
         result = call_openai(instructions, message)
-        processed.append({**row.to_dict(), "result": result})
+        processed.append({"index": int(idx), **row.to_dict(), "result": result})
     return processed
 
 

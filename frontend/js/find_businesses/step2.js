@@ -23,17 +23,19 @@ function renderResultsTable(data) {
   var businessKey = getBusinessNameKey(data[0]);
   var html =
     "<table><thead><tr>" +
-    "<th>" +
+    "<th>index</th><th>" +
     businessKey +
     "</th><th>result</th>" +
     "</tr></thead><tbody>";
   data.forEach(function (row) {
+    if (!row) return;
     html +=
       "<tr>" +
       "<td>" +
+      (row.index != null ? row.index : "") +
+      "</td><td>" +
       (row[businessKey] || "") +
-      "</td>" +
-      "<td>" +
+      "</td><td>" +
       row.result +
       "</td>" +
       "</tr>";
@@ -42,26 +44,6 @@ function renderResultsTable(data) {
   $("#results-container").html(html);
 }
 
-function addOrUpdateResultRow(rowData, index) {
-  var $table = $("#results-container table");
-  if (!$table.length) {
-    renderResultsTable([rowData]);
-    return;
-  }
-  var businessKey = getBusinessNameKey(rowData);
-  var rowHtml =
-    "<tr><td>" +
-    (rowData[businessKey] || "") +
-    "</td><td>" +
-    rowData.result +
-    "</td></tr>";
-  var $rows = $table.find("tbody tr");
-  if (index < $rows.length) {
-    $rows.eq(index).replaceWith(rowHtml);
-  } else {
-    $table.find("tbody").append(rowHtml);
-  }
-}
 
   $("#process-btn").on("click", function () {
     var prompt = $("#prompt").val();
@@ -73,8 +55,11 @@ function addOrUpdateResultRow(rowData, index) {
     data: JSON.stringify({ prompt: prompt, instructions: instructions }),
     success: function (data) {
       console.log("Raw data from backend:", data);
-      step2Results = data;
-      renderResultsTable(data);
+      step2Results = [];
+      data.forEach(function (row) {
+        step2Results[row.index] = row;
+      });
+      renderResultsTable(step2Results);
       localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
@@ -86,25 +71,53 @@ function addOrUpdateResultRow(rowData, index) {
   $("#process-single-btn").on("click", function () {
     var prompt = $("#prompt").val();
     var instructions = $("#instructions").val();
-    var rowIndex = parseInt($("#row-index").val()) || 0;
+    var rowIndex = parseInt($("#start-index").val()) || 0;
     $.ajax({
       url: "/find_businesses/process_single",
       method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({
-      prompt: prompt,
-      instructions: instructions,
-      row_index: rowIndex,
-    }),
-    success: function (data) {
-      step2Results[rowIndex] = data;
-      addOrUpdateResultRow(data, rowIndex);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
-    },
-    error: function (xhr) {
-      alert(xhr.responseText);
-    },
+      contentType: "application/json",
+      data: JSON.stringify({
+        prompt: prompt,
+        instructions: instructions,
+        row_index: rowIndex,
+      }),
+      success: function (data) {
+        step2Results[rowIndex] = data;
+        renderResultsTable(step2Results);
+        localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      },
+      error: function (xhr) {
+        alert(xhr.responseText);
+      },
+    });
   });
+
+  $("#process-range-btn").on("click", function () {
+    var prompt = $("#prompt").val();
+    var instructions = $("#instructions").val();
+    var startIndex = parseInt($("#start-index").val()) || 0;
+    var endIndex = parseInt($("#end-index").val()) || startIndex;
+    $.ajax({
+      url: "/find_businesses/process_range",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        prompt: prompt,
+        instructions: instructions,
+        start_index: startIndex,
+        end_index: endIndex,
+      }),
+      success: function (data) {
+        data.forEach(function (row) {
+          step2Results[row.index] = row;
+        });
+        renderResultsTable(step2Results);
+        localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      },
+      error: function (xhr) {
+        alert(xhr.responseText);
+      },
+    });
   });
 
 $(document).ready(function () {
