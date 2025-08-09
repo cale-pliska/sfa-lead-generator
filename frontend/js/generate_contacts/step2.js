@@ -75,6 +75,7 @@ $("#process-btn").on("click", function () {
       console.log("Raw data from backend:", data);
       step2Results = data;
       renderResultsTable(data);
+      localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -82,7 +83,7 @@ $("#process-btn").on("click", function () {
   });
 });
 
-$("#process-single-btn").on("click", function () {
+  $("#process-single-btn").on("click", function () {
   var prompt = $("#prompt").val();
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
@@ -98,14 +99,15 @@ $("#process-single-btn").on("click", function () {
     success: function (data) {
       step2Results[rowIndex] = data;
       addOrUpdateResultRow(data, rowIndex);
+      localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
     },
   });
-});
+  });
 
-$(document).ready(function () {
+  $(document).ready(function () {
   var defaultInstructions = `You are a contact generation expert for sales.
 
 For the business provided, find all key contacts. Prioritize:  
@@ -138,6 +140,16 @@ Example output:
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]`;
   $("#instructions").val(defaultInstructions);
+  var defaultPrompt = "{Business_Name}";
+  var savedPrompt = localStorage.getItem("generate_contacts_step2_prompt");
+  if (savedPrompt && savedPrompt.trim() !== "") {
+    $("#prompt").val(savedPrompt);
+  } else {
+    $("#prompt").val(defaultPrompt);
+  }
+  $("#prompt").on("input", function () {
+    localStorage.setItem("generate_contacts_step2_prompt", $(this).val());
+  });
 
   var saved = localStorage.getItem("saved_results");
   if (saved) {
@@ -148,8 +160,18 @@ Example output:
       console.error(e);
     }
   }
+
+  $("#clear-step2").on("click", function () {
+    step2Results = [];
+    $("#results-container").empty();
+    $("#prompt").val(defaultPrompt);
+    $("#instructions").val(defaultInstructions);
+    localStorage.removeItem("saved_results");
+    localStorage.removeItem("generate_contacts_step2_prompt");
+  });
 });
 
-$("#save-setup-btn").on("click", function () {
+$(window).on("beforeunload", function () {
+  localStorage.setItem("generate_contacts_step2_prompt", $("#prompt").val());
   localStorage.setItem("saved_results", JSON.stringify(step2Results));
 });

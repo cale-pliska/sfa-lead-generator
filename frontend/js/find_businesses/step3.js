@@ -50,8 +50,9 @@ $("#parse-btn").on("click", function () {
     contentType: "application/json",
     data: JSON.stringify({ results: step2Results }),
     success: function (data) {
-      parsedBusinesses = data;
-      renderBusinessesTable(data);
+      parsedBusinesses = parsedBusinesses.concat(data);
+      renderBusinessesTable(parsedBusinesses);
+      localStorage.setItem("saved_businesses", JSON.stringify(parsedBusinesses));
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -61,4 +62,10 @@ $("#parse-btn").on("click", function () {
 
 $("#save-setup-btn").on("click", function () {
   localStorage.setItem("saved_businesses", JSON.stringify(parsedBusinesses));
+});
+
+$("#clear-step3").on("click", function () {
+  $("#contacts-container").empty();
+  parsedBusinesses = [];
+  localStorage.removeItem("saved_businesses");
 });
