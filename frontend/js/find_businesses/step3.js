@@ -40,15 +40,22 @@ function renderBusinessesTable(data) {
 }
 
 $("#parse-btn").on("click", function () {
-  if (!step2Results.length) {
+  if (!Object.keys(step2Results).length) {
     alert("No Step 2 results to parse");
     return;
   }
+  var resultsArray = Object.keys(step2Results)
+    .sort(function (a, b) {
+      return a - b;
+    })
+    .map(function (k) {
+      return step2Results[k];
+    });
   $.ajax({
     url: "/find_businesses/parse_contacts",
     method: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ results: step2Results }),
+    data: JSON.stringify({ results: resultsArray }),
     success: function (data) {
       parsedBusinesses = parsedBusinesses.concat(data);
       renderBusinessesTable(parsedBusinesses);

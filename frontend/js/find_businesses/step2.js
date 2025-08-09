@@ -1,4 +1,4 @@
-var step2Results = [];
+var step2Results = {};
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -22,66 +22,41 @@ function renderResultsTable(data) {
   }
   var businessKey = getBusinessNameKey(data[0]);
   var html =
-    "<table><thead><tr>" +
-    "<th>" +
+    "<table><thead><tr><th>index</th><th>" +
     businessKey +
-    "</th><th>result</th>" +
-    "</tr></thead><tbody>";
+    "</th><th>result</th></tr></thead><tbody>";
   data.forEach(function (row) {
     html +=
-      "<tr>" +
-      "<td>" +
+      "<tr><td>" +
+      row.index +
+      "</td><td>" +
       (row[businessKey] || "") +
-      "</td>" +
-      "<td>" +
+      "</td><td>" +
       row.result +
-      "</td>" +
-      "</tr>";
+      "</td></tr>";
   });
   html += "</tbody></table>";
   $("#results-container").html(html);
 }
 
-function addOrUpdateResultRow(rowData, index) {
-  var $table = $("#results-container table");
-  if (!$table.length) {
-    renderResultsTable([rowData]);
-    return;
-  }
-  var businessKey = getBusinessNameKey(rowData);
-  var rowHtml =
-    "<tr><td>" +
-    (rowData[businessKey] || "") +
-    "</td><td>" +
-    rowData.result +
-    "</td></tr>";
-  var $rows = $table.find("tbody tr");
-  if (index < $rows.length) {
-    $rows.eq(index).replaceWith(rowHtml);
+function appendRawOutput(rowIndex, data) {
+  var container = $("#raw-output");
+  var id = "raw-row-" + rowIndex;
+  var html =
+    '<div id="' +
+    id +
+    '"><h4>Row ' +
+    rowIndex +
+    '</h4><pre>' +
+    JSON.stringify(data, null, 2) +
+    "</pre></div>";
+  var existing = container.find("#" + id);
+  if (existing.length) {
+    existing.replaceWith(html);
   } else {
-    $table.find("tbody").append(rowHtml);
+    container.append(html);
   }
 }
-
-  $("#process-btn").on("click", function () {
-    var prompt = $("#prompt").val();
-    var instructions = $("#instructions").val();
-    $.ajax({
-      url: "/find_businesses/process",
-      method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ prompt: prompt, instructions: instructions }),
-    success: function (data) {
-      console.log("Raw data from backend:", data);
-      step2Results = data;
-      renderResultsTable(data);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
-    },
-    error: function (xhr) {
-      alert(xhr.responseText);
-    },
-  });
-});
 
   $("#process-single-btn").on("click", function () {
     var prompt = $("#prompt").val();
@@ -97,14 +72,74 @@ function addOrUpdateResultRow(rowData, index) {
       row_index: rowIndex,
     }),
     success: function (data) {
+      data.index = rowIndex;
       step2Results[rowIndex] = data;
-      addOrUpdateResultRow(data, rowIndex);
+      var rows = Object.keys(step2Results)
+        .sort(function (a, b) {
+          return a - b;
+        })
+        .map(function (k) {
+          return step2Results[k];
+        });
+      renderResultsTable(rows);
+      appendRawOutput(rowIndex, data);
       localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
     },
   });
+  });
+
+  $("#process-range-btn").on("click", function () {
+    var prompt = $("#prompt").val();
+    var instructions = $("#instructions").val();
+    var startIndex = parseInt($("#start-index").val()) || 0;
+    var endIndex = parseInt($("#end-index").val()) || startIndex;
+    var indexes = [];
+    for (var i = startIndex; i <= endIndex; i++) {
+      indexes.push(i);
+    }
+
+    function processNext(pos) {
+      if (pos >= indexes.length) return;
+      var rowIndex = indexes[pos];
+      $.ajax({
+        url: "/find_businesses/process_single",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          prompt: prompt,
+          instructions: instructions,
+          row_index: rowIndex,
+        }),
+        success: function (data) {
+          data.index = rowIndex;
+          step2Results[rowIndex] = data;
+          var rows = Object.keys(step2Results)
+            .sort(function (a, b) {
+              return a - b;
+            })
+            .map(function (k) {
+              return step2Results[k];
+            });
+          renderResultsTable(rows);
+          appendRawOutput(rowIndex, data);
+          localStorage.setItem("saved_results", JSON.stringify(step2Results));
+          setTimeout(function () {
+            processNext(pos + 1);
+          }, 300);
+        },
+        error: function (xhr) {
+          console.error("Error processing row", rowIndex, xhr);
+          setTimeout(function () {
+            processNext(pos + 1);
+          }, 300);
+        },
+      });
+    }
+
+    processNext(0);
   });
 
 $(document).ready(function () {
@@ -135,15 +170,40 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   if (saved) {
     try {
       step2Results = JSON.parse(saved);
-      renderResultsTable(step2Results);
+      if (Array.isArray(step2Results)) {
+        var temp = {};
+        step2Results.forEach(function (row, idx) {
+          if (row) {
+            row.index = row.index || idx;
+            temp[row.index] = row;
+            appendRawOutput(row.index, row);
+          }
+        });
+        step2Results = temp;
+      } else {
+        for (var key in step2Results) {
+          if (step2Results.hasOwnProperty(key)) {
+            appendRawOutput(key, step2Results[key]);
+          }
+        }
+      }
+      var rows = Object.keys(step2Results)
+        .sort(function (a, b) {
+          return a - b;
+        })
+        .map(function (k) {
+          return step2Results[k];
+        });
+      renderResultsTable(rows);
     } catch (e) {
       console.error(e);
     }
   }
 
   $("#clear-step2").on("click", function () {
-    step2Results = [];
+    step2Results = {};
     $("#results-container").empty();
+    $("#raw-output").empty();
     $("#prompt").val(defaultPrompt);
     $("#instructions").val(defaultInstructions);
     localStorage.removeItem("saved_results");
