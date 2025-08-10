@@ -1,4 +1,4 @@
-var step2Results = [];
+var step2Results = {};
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -15,81 +15,97 @@ function getBusinessNameKey(obj) {
   return Object.keys(obj)[0];
 }
 
-function renderResultsTable(data) {
-  if (!data.length) {
+function renderResultsTable(resultsObj) {
+  var indexes = Object.keys(resultsObj).sort(function (a, b) {
+    return parseInt(a) - parseInt(b);
+  });
+  if (!indexes.length) {
     $("#results-container").html("No results");
     return;
   }
-  var businessKey = getBusinessNameKey(data[0]);
+  var firstRow = resultsObj[indexes[0]];
+  var businessKey = getBusinessNameKey(firstRow);
   var html =
-    "<table><thead><tr>" +
-    "<th>" +
+    "<table><thead><tr><th>index</th><th>" +
     businessKey +
-    "</th><th>result</th>" +
-    "</tr></thead><tbody>";
-  data.forEach(function (row) {
+    "</th><th>result</th></tr></thead><tbody>";
+  indexes.forEach(function (idx) {
+    var row = resultsObj[idx];
     html +=
-      "<tr>" +
-      "<td>" +
+      "<tr><td>" +
+      idx +
+      "</td><td>" +
       (row[businessKey] || "") +
-      "</td>" +
-      "<td>" +
+      "</td><td>" +
       row.result +
-      "</td>" +
-      "</tr>";
+      "</td></tr>";
   });
   html += "</tbody></table>";
   $("#results-container").html(html);
 }
 
-function addOrUpdateResultRow(rowData, index) {
-  var $table = $("#results-container table");
-  if (!$table.length) {
-    renderResultsTable([rowData]);
+$("#process-range-btn").on("click", function () {
+  var prompt = $("#prompt").val();
+  var instructions = $("#instructions").val();
+  var start = parseInt($("#start-index").val()) || 0;
+  var end = parseInt($("#end-index").val()) || 0;
+  if (end < start) {
+    alert("End index must be greater than or equal to start index");
     return;
   }
-  var businessKey = getBusinessNameKey(rowData);
-  var rowHtml =
-    "<tr><td>" +
-    (rowData[businessKey] || "") +
-    "</td><td>" +
-    rowData.result +
-    "</td></tr>";
-  var $rows = $table.find("tbody tr");
-  if (index < $rows.length) {
-    $rows.eq(index).replaceWith(rowHtml);
-  } else {
-    $table.find("tbody").append(rowHtml);
+  var indexes = [];
+  for (var i = start; i <= end; i++) {
+    indexes.push(i);
   }
-}
 
-  $("#process-btn").on("click", function () {
-    var prompt = $("#prompt").val();
-    var instructions = $("#instructions").val();
-    $.ajax({
-      url: "/find_businesses/process",
-      method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ prompt: prompt, instructions: instructions }),
-    success: function (data) {
-      console.log("Raw data from backend:", data);
-      step2Results = data;
-      renderResultsTable(data);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
-    },
-    error: function (xhr) {
-      alert(xhr.responseText);
-    },
-  });
+  function processNext(pos) {
+    if (pos >= indexes.length) return;
+    var idx = indexes[pos];
+    function send(attempt) {
+      $.ajax({
+        url: "/find_businesses/process_single",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          prompt: prompt,
+          instructions: instructions,
+          row_index: idx,
+        }),
+        success: function (data) {
+          data.index = idx;
+          step2Results[idx] = data;
+          renderResultsTable(step2Results);
+          localStorage.setItem("saved_results", JSON.stringify(step2Results));
+          setTimeout(function () {
+            processNext(pos + 1);
+          }, 300);
+        },
+        error: function (xhr) {
+          console.error("Error processing row", idx, xhr.responseText);
+          if (attempt < 1) {
+            setTimeout(function () {
+              send(attempt + 1);
+            }, 300);
+          } else {
+            setTimeout(function () {
+              processNext(pos + 1);
+            }, 300);
+          }
+        },
+      });
+    }
+    send(0);
+  }
+  processNext(0);
 });
 
-  $("#process-single-btn").on("click", function () {
-    var prompt = $("#prompt").val();
-    var instructions = $("#instructions").val();
-    var rowIndex = parseInt($("#row-index").val()) || 0;
-    $.ajax({
-      url: "/find_businesses/process_single",
-      method: "POST",
+$("#process-single-btn").on("click", function () {
+  var prompt = $("#prompt").val();
+  var instructions = $("#instructions").val();
+  var rowIndex = parseInt($("#row-index").val()) || 0;
+  $.ajax({
+    url: "/find_businesses/process_single",
+    method: "POST",
     contentType: "application/json",
     data: JSON.stringify({
       prompt: prompt,
@@ -97,15 +113,16 @@ function addOrUpdateResultRow(rowData, index) {
       row_index: rowIndex,
     }),
     success: function (data) {
+      data.index = rowIndex;
       step2Results[rowIndex] = data;
-      addOrUpdateResultRow(data, rowIndex);
+      renderResultsTable(step2Results);
       localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
     },
   });
-  });
+});
 
 $(document).ready(function () {
   var defaultInstructions = `You are a business finder expert for sales.
@@ -142,7 +159,7 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   }
 
   $("#clear-step2").on("click", function () {
-    step2Results = [];
+    step2Results = {};
     $("#results-container").empty();
     $("#prompt").val(defaultPrompt);
     $("#instructions").val(defaultInstructions);
