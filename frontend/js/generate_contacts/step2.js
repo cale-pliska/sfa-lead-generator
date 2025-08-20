@@ -119,7 +119,7 @@ $("#process-single-btn").on("click", function () {
       localStorage.setItem("saved_results", JSON.stringify(step2Results));
     },
     error: function (xhr) {
-      alert(xhr.responseText);
+      console.error("Error processing row", rowIndex, xhr.responseText);
     },
   });
 });
