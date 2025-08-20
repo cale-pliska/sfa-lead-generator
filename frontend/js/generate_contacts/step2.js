@@ -44,7 +44,8 @@ function renderResultsTable(resultsObj) {
   $("#results-container").html(html);
 }
 
-$("#process-range-btn").on("click", function () {
+$("#process-range-btn").on("click", function (e) {
+  e.preventDefault();
   var prompt = $("#prompt").val();
   var instructions = $("#instructions").val();
   var start = parseInt($("#start-index").val()) || 0;
@@ -72,6 +73,7 @@ $("#process-range-btn").on("click", function () {
           row_index: idx,
         }),
         success: function (data) {
+          data = typeof data === "string" ? JSON.parse(data) : data;
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
@@ -99,7 +101,8 @@ $("#process-range-btn").on("click", function () {
   processNext(0);
 });
 
-$("#process-single-btn").on("click", function () {
+$("#process-single-btn").on("click", function (e) {
+  e.preventDefault();
   var prompt = $("#prompt").val();
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
@@ -113,6 +116,7 @@ $("#process-single-btn").on("click", function () {
       row_index: rowIndex,
     }),
     success: function (data) {
+      data = typeof data === "string" ? JSON.parse(data) : data;
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
