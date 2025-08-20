@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+import pandas as pd
 
 from . import data_store
 from .processing import apply_prompt_to_dataframe, apply_prompt_to_row
@@ -32,6 +33,6 @@ def process_single():
 
     row = data_store.DATAFRAME.iloc[row_index]
     result = apply_prompt_to_row(row, instructions, prompt)
-    new_row = row.to_dict()
-    new_row["result"] = result
-    return jsonify(new_row)
+    row_dict = row.where(pd.notnull(row), None).to_dict()
+    row_dict["result"] = result
+    return jsonify(row_dict)

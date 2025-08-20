@@ -67,7 +67,8 @@ def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     for _, row in df.iterrows():
         message = _format_prompt(prompt, row)
         result = call_openai(instructions, message)
-        processed.append({**row.to_dict(), "result": result})
+        row_dict = row.where(pd.notnull(row), None).to_dict()
+        processed.append({**row_dict, "result": result})
     return processed
 
 
