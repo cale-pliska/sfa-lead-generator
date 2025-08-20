@@ -3,10 +3,11 @@ from flask import Blueprint, jsonify, request
 from . import data_store
 from .processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
-step2_bp = Blueprint("step2", __name__)
+# Blueprint for Step 2 of Generate Contacts
+step2_bp = Blueprint("generate_contacts_step2", __name__)
 
 
-@step2_bp.route("/process", methods=["POST"])
+@step2_bp.route("/generate_contacts/process", methods=["POST"])
 def process():
     """Apply the prompt to the entire DataFrame."""
     prompt = request.json.get("prompt", "")
@@ -15,7 +16,7 @@ def process():
     return jsonify(results)
 
 
-@step2_bp.route("/process_single", methods=["POST"])
+@step2_bp.route("/generate_contacts/process_single", methods=["POST"])
 def process_single():
     """Process a single row of data."""
     prompt = request.json.get("prompt", "")

@@ -63,7 +63,7 @@ $("#process-range-btn").on("click", function () {
     var idx = indexes[pos];
     function send(attempt) {
       $.ajax({
-        url: "/process_single",
+        url: "/generate_contacts/process_single",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify({
@@ -104,7 +104,7 @@ $("#process-single-btn").on("click", function () {
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
   $.ajax({
-    url: "/process_single",
+    url: "/generate_contacts/process_single",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({
