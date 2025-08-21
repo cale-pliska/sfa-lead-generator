@@ -137,7 +137,7 @@ Each object must contain:
 
 DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#instructions").val(defaultInstructions);
-  var defaultPrompt = "{Locations}";
+  var defaultPrompt = "{Location}";
   var savedPrompt = localStorage.getItem("find_businesses_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);

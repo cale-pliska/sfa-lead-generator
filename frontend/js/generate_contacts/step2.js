@@ -157,7 +157,7 @@ Example output:
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]`;
   $("#instructions").val(defaultInstructions);
-  var defaultPrompt = "{Business_Name}";
+  var defaultPrompt = "{business_name} {website}";
   var savedPrompt = localStorage.getItem("generate_contacts_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
