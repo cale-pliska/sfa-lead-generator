@@ -8,28 +8,34 @@ function loadSavedSetup() {
 
 function autoPopulateFromSaved() {
   const setup = loadSavedSetup();
-  if (setup.savedTsv || setup.savedInstructions || setup.savedPrompt) {
-    $("#tsv-input").val(setup.savedTsv);
-    $("#instructions").val(setup.savedInstructions);
-    $("#prompt").val(setup.savedPrompt);
+  let tsvData = setup.savedTsv;
 
-    if (setup.savedTsv) {
-      const formData = new FormData();
-      formData.append("tsv_text", setup.savedTsv);
-      $.ajax({
-        url: "/upload",
-        method: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (data) {
-          renderDataTable(JSON.parse(data));
-        },
-        error: function (xhr) {
-          console.error(xhr.responseText);
-        },
-      });
-    }
+  if (!tsvData) {
+    tsvData =
+      "business_name\tLocation\tPopulation\twebsite\n" +
+      "Origin Point\tmadison wi Downtown\t25000\thttps://www.originpoint.com/branches/wi/madison";
+  }
+
+  $("#tsv-input").val(tsvData);
+  $("#instructions").val(setup.savedInstructions);
+  $("#prompt").val(setup.savedPrompt);
+
+  if (tsvData) {
+    const formData = new FormData();
+    formData.append("tsv_text", tsvData);
+    $.ajax({
+      url: "/upload",
+      method: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (data) {
+        renderDataTable(JSON.parse(data));
+      },
+      error: function (xhr) {
+        console.error(xhr.responseText);
+      },
+    });
   }
 }
 
