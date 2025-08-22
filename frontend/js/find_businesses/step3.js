@@ -1,5 +1,23 @@
 var parsedBusinesses = [];
 
+function copyTableToClipboard(selector) {
+  var table = $(selector);
+  if (table.length === 0) {
+    alert('No data to copy.');
+    return;
+  }
+  var rows = [];
+  table.find('tr').each(function () {
+    var cols = [];
+    $(this).find('th,td').each(function () {
+      cols.push($(this).text());
+    });
+    rows.push(cols.join('\t'));
+  });
+  var tsv = rows.join('\n');
+  navigator.clipboard.writeText(tsv);
+}
+
 $(document).ready(function () {
   var saved = localStorage.getItem("saved_businesses");
   if (saved) {
@@ -23,7 +41,7 @@ function renderBusinessesTable(data) {
     if (b === "business_name") return 1;
     return 0;
   });
-  var html = "<table><thead><tr>";
+  var html = '<table id="businesses-results-table"><thead><tr>';
   cols.forEach(function (col) {
     html += "<th>" + col + "</th>";
   });
@@ -64,4 +82,8 @@ $("#clear-step3").on("click", function () {
   $("#contacts-container").empty();
   parsedBusinesses = [];
   localStorage.removeItem("saved_businesses");
+});
+
+$("#copy-step3-results").on("click", function () {
+  copyTableToClipboard('#businesses-results-table');
 });
