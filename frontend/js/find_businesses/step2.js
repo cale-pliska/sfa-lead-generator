@@ -162,10 +162,7 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#clear-step2").on("click", function () {
     step2Results = {};
     $("#results-container").empty();
-    $("#prompt").val(defaultPrompt);
-    $("#instructions").val(defaultInstructions);
     localStorage.removeItem(RESULTS_KEY);
-    localStorage.removeItem("find_businesses_step2_prompt");
   });
 });
 
