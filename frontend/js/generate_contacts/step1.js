@@ -77,12 +77,6 @@ $("#upload-form").on("submit", function (e) {
   });
 });
 
-$("#save-setup-btn").on("click", function () {
-  localStorage.setItem(STORAGE_KEYS.tsv, $("#tsv-input").val());
-  localStorage.setItem(STORAGE_KEYS.instructions, $("#instructions").val());
-  localStorage.setItem(STORAGE_KEYS.prompt, $("#prompt").val());
-});
-
 $("#clear-step1").on("click", function () {
   $("#table-container").empty();
 });
