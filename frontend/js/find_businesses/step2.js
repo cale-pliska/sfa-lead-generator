@@ -1,5 +1,7 @@
 const RESULTS_KEY = "find_businesses_step2_results";
 var step2Results = {};
+var cancelProcessing = false;
+var currentRequest = null;
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -59,11 +61,13 @@ $("#process-range-btn").on("click", function () {
     indexes.push(i);
   }
 
+  cancelProcessing = false;
+
   function processNext(pos) {
-    if (pos >= indexes.length) return;
+    if (cancelProcessing || pos >= indexes.length) return;
     var idx = indexes[pos];
     function send(attempt) {
-      $.ajax({
+      currentRequest = $.ajax({
         url: "/find_businesses/process_single",
         method: "POST",
         contentType: "application/json",
@@ -77,20 +81,24 @@ $("#process-range-btn").on("click", function () {
           step2Results[idx] = data;
           renderResultsTable(step2Results);
           localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
-          setTimeout(function () {
-            processNext(pos + 1);
-          }, 300);
-        },
-        error: function (xhr) {
-          console.error("Error processing row", idx, xhr.responseText);
-          if (attempt < 1) {
-            setTimeout(function () {
-              send(attempt + 1);
-            }, 300);
-          } else {
+          if (!cancelProcessing) {
             setTimeout(function () {
               processNext(pos + 1);
             }, 300);
+          }
+        },
+        error: function (xhr) {
+          console.error("Error processing row", idx, xhr.responseText);
+          if (!cancelProcessing) {
+            if (attempt < 1) {
+              setTimeout(function () {
+                send(attempt + 1);
+              }, 300);
+            } else {
+              setTimeout(function () {
+                processNext(pos + 1);
+              }, 300);
+            }
           }
         },
       });
@@ -123,6 +131,13 @@ $("#process-single-btn").on("click", function () {
       alert(xhr.responseText);
     },
   });
+});
+
+$("#cancel-step2").on("click", function () {
+  cancelProcessing = true;
+  if (currentRequest) {
+    currentRequest.abort();
+  }
 });
 
 $(document).ready(function () {

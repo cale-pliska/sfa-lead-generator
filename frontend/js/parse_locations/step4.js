@@ -1,6 +1,8 @@
 console.log('step4.js loaded');
 
 let step4Results = [];
+let cancelStep4 = false;
+let currentRequest = null;
 
 function copyTableToClipboard(selector) {
     const table = $(selector);
@@ -75,6 +77,7 @@ async function processRecursive() {
 
     const startTime = Date.now();
     const queue = [];
+    cancelStep4 = false;
 
     initialRows.forEach(function (row) {
         if (row.population < depth) {
@@ -86,6 +89,9 @@ async function processRecursive() {
     });
 
     while (queue.length > 0) {
+        if (cancelStep4) {
+            return;
+        }
         if (Date.now() - startTime > 60000) {
             alert('Process reached the 4 min timeout limit.');
             return;
@@ -95,7 +101,7 @@ async function processRecursive() {
         removeRowFromTable(row);
 
         try {
-            const response = await $.ajax({
+            currentRequest = $.ajax({
                 url: '/parse_locations/process_single',
                 method: 'POST',
                 contentType: 'application/json',
@@ -104,6 +110,7 @@ async function processRecursive() {
                     data: [row],
                 }),
             });
+            const response = await currentRequest;
             const res = response.results || [];
             res.forEach(function (item) {
                 let rawData = item.raw_data || '';
@@ -130,6 +137,8 @@ async function processRecursive() {
             });
         } catch (e) {
             console.error('Error processing', row.location, e);
+        } finally {
+            currentRequest = null;
         }
     }
 }
@@ -138,6 +147,7 @@ $(document).ready(function () {
     $('#process-recursive').on('click', async function () {
         $('#step4-results-table').remove();
         step4Results = [];
+        cancelStep4 = false;
         await processRecursive();
     });
 
@@ -148,5 +158,12 @@ $(document).ready(function () {
 
     $('#copy-step4-results').on('click', function () {
         copyTableToClipboard('#step4-results-table');
+    });
+
+    $('#cancel-step4').on('click', function () {
+        cancelStep4 = true;
+        if (currentRequest) {
+            currentRequest.abort();
+        }
     });
 });
