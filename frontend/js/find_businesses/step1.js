@@ -1,7 +1,14 @@
+const STORAGE_KEYS = {
+  tsv: "find_businesses_step1_tsv",
+  instructions: "find_businesses_step1_instructions",
+  prompt: "find_businesses_step1_prompt",
+};
+
 function loadSavedSetup() {
-  const savedTsv = localStorage.getItem("saved_tsv") || "";
-  const savedInstructions = localStorage.getItem("saved_instructions") || "";
-  const savedPrompt = localStorage.getItem("saved_prompt") || "";
+  const savedTsv = localStorage.getItem(STORAGE_KEYS.tsv) || "";
+  const savedInstructions =
+    localStorage.getItem(STORAGE_KEYS.instructions) || "";
+  const savedPrompt = localStorage.getItem(STORAGE_KEYS.prompt) || "";
 
   return { savedTsv, savedInstructions, savedPrompt };
 }
@@ -45,9 +52,9 @@ function autoPopulateFromSaved() {
 }
 
 function autoSave() {
-  localStorage.setItem("saved_tsv", $("#tsv-input").val());
-  localStorage.setItem("saved_instructions", $("#instructions").val());
-  localStorage.setItem("saved_prompt", $("#prompt").val());
+  localStorage.setItem(STORAGE_KEYS.tsv, $("#tsv-input").val());
+  localStorage.setItem(STORAGE_KEYS.instructions, $("#instructions").val());
+  localStorage.setItem(STORAGE_KEYS.prompt, $("#prompt").val());
 }
 
 $(document).ready(function () {
@@ -76,9 +83,9 @@ $("#upload-form").on("submit", function (e) {
 });
 
 $("#save-setup-btn").on("click", function () {
-  localStorage.setItem("saved_tsv", $("#tsv-input").val());
-  localStorage.setItem("saved_instructions", $("#instructions").val());
-  localStorage.setItem("saved_prompt", $("#prompt").val());
+  localStorage.setItem(STORAGE_KEYS.tsv, $("#tsv-input").val());
+  localStorage.setItem(STORAGE_KEYS.instructions, $("#instructions").val());
+  localStorage.setItem(STORAGE_KEYS.prompt, $("#prompt").val());
 });
 
 $("#clear-step1").on("click", function () {
@@ -86,9 +93,9 @@ $("#clear-step1").on("click", function () {
   $("#instructions").val("");
   $("#prompt").val("");
   $("#table-container").empty();
-  localStorage.removeItem("saved_tsv");
-  localStorage.removeItem("saved_instructions");
-  localStorage.removeItem("saved_prompt");
+  localStorage.removeItem(STORAGE_KEYS.tsv);
+  localStorage.removeItem(STORAGE_KEYS.instructions);
+  localStorage.removeItem(STORAGE_KEYS.prompt);
 });
 
 function renderDataTable(data) {
