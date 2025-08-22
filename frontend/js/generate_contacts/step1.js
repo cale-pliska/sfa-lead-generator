@@ -84,13 +84,7 @@ $("#save-setup-btn").on("click", function () {
 });
 
 $("#clear-step1").on("click", function () {
-  $("#tsv-input").val("");
-  $("#instructions").val("");
-  $("#prompt").val("");
   $("#table-container").empty();
-  localStorage.removeItem(STORAGE_KEYS.tsv);
-  localStorage.removeItem(STORAGE_KEYS.instructions);
-  localStorage.removeItem(STORAGE_KEYS.prompt);
 });
 
 function renderDataTable(data) {

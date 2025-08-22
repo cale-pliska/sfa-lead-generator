@@ -182,10 +182,7 @@ Example output:
   $("#clear-step2").on("click", function () {
     step2Results = {};
     $("#results-container").empty();
-    $("#prompt").val(defaultPrompt);
-    $("#instructions").val(defaultInstructions);
     localStorage.removeItem(RESULTS_KEY);
-    localStorage.removeItem("generate_contacts_step2_prompt");
   });
 });
 
