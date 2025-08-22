@@ -1,3 +1,4 @@
+const RESULTS_KEY = "generate_contacts_step2_results";
 var step2Results = {};
 
 function getBusinessNameKey(obj) {
@@ -75,7 +76,7 @@ $("#process-range-btn").on("click", function () {
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
-          localStorage.setItem("saved_results", JSON.stringify(step2Results));
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
           setTimeout(function () {
             processNext(pos + 1);
           }, 300);
@@ -116,7 +117,7 @@ $("#process-single-btn").on("click", function () {
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
     },
     error: function (xhr) {
       console.error("Error processing row", rowIndex, xhr.responseText);
@@ -168,7 +169,7 @@ Example output:
     localStorage.setItem("generate_contacts_step2_prompt", $(this).val());
   });
 
-  var saved = localStorage.getItem("saved_results");
+  var saved = localStorage.getItem(RESULTS_KEY);
   if (saved) {
     try {
       step2Results = JSON.parse(saved);
@@ -183,13 +184,13 @@ Example output:
     $("#results-container").empty();
     $("#prompt").val(defaultPrompt);
     $("#instructions").val(defaultInstructions);
-    localStorage.removeItem("saved_results");
+    localStorage.removeItem(RESULTS_KEY);
     localStorage.removeItem("generate_contacts_step2_prompt");
   });
 });
 
 $(window).on("beforeunload", function () {
   localStorage.setItem("generate_contacts_step2_prompt", $("#prompt").val());
-  localStorage.setItem("saved_results", JSON.stringify(step2Results));
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
 });
 

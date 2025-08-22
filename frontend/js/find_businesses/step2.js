@@ -1,3 +1,4 @@
+const RESULTS_KEY = "find_businesses_step2_results";
 var step2Results = {};
 
 function getBusinessNameKey(obj) {
@@ -75,7 +76,7 @@ $("#process-range-btn").on("click", function () {
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
-          localStorage.setItem("saved_results", JSON.stringify(step2Results));
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
           setTimeout(function () {
             processNext(pos + 1);
           }, 300);
@@ -116,7 +117,7 @@ $("#process-single-btn").on("click", function () {
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -148,7 +149,7 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
     localStorage.setItem("find_businesses_step2_prompt", $(this).val());
   });
 
-  var saved = localStorage.getItem("saved_results");
+  var saved = localStorage.getItem(RESULTS_KEY);
   if (saved) {
     try {
       step2Results = JSON.parse(saved);
@@ -163,12 +164,12 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
     $("#results-container").empty();
     $("#prompt").val(defaultPrompt);
     $("#instructions").val(defaultInstructions);
-    localStorage.removeItem("saved_results");
+    localStorage.removeItem(RESULTS_KEY);
     localStorage.removeItem("find_businesses_step2_prompt");
   });
 });
 
 $(window).on("beforeunload", function () {
   localStorage.setItem("find_businesses_step2_prompt", $("#prompt").val());
-  localStorage.setItem("saved_results", JSON.stringify(step2Results));
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
 });
