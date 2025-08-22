@@ -1,42 +1,60 @@
+const STORAGE_KEYS = {
+  tsv: "find_businesses_step1_tsv",
+  instructions: "find_businesses_step1_instructions",
+  prompt: "find_businesses_step1_prompt",
+};
+
 function loadSavedSetup() {
-  const savedTsv = localStorage.getItem("saved_tsv") || "";
-  const savedInstructions = localStorage.getItem("saved_instructions") || "";
-  const savedPrompt = localStorage.getItem("saved_prompt") || "";
+  const savedTsv = localStorage.getItem(STORAGE_KEYS.tsv) || "";
+  const savedInstructions =
+    localStorage.getItem(STORAGE_KEYS.instructions) || "";
+  const savedPrompt = localStorage.getItem(STORAGE_KEYS.prompt) || "";
 
   return { savedTsv, savedInstructions, savedPrompt };
 }
 
 function autoPopulateFromSaved() {
   const setup = loadSavedSetup();
-  if (setup.savedTsv || setup.savedInstructions || setup.savedPrompt) {
-    $("#tsv-input").val(setup.savedTsv);
-    $("#instructions").val(setup.savedInstructions);
-    $("#prompt").val(setup.savedPrompt);
+  let tsvData = setup.savedTsv;
 
-    if (setup.savedTsv) {
-      const formData = new FormData();
-      formData.append("tsv_text", setup.savedTsv);
-        $.ajax({
-          url: "/find_businesses/upload",
-        method: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (data) {
-          renderDataTable(JSON.parse(data));
-        },
-        error: function (xhr) {
-          console.error(xhr.responseText);
-        },
-      });
-    }
+  if (!tsvData) {
+    tsvData =
+      "Location\tPopulation\n" +
+      "madison wi Downtown\t25000\n" +
+      "madison wi East Side\t60000\n" +
+      "madison wi West Side\t65000\n" +
+      "madison wi North Side\t40000\n" +
+      "madison wi South Side\t55000\n" +
+      "madison wi Near West Side\t24500";
+  }
+
+  $("#tsv-input").val(tsvData);
+  $("#instructions").val(setup.savedInstructions);
+  $("#prompt").val(setup.savedPrompt);
+
+  if (tsvData) {
+    const formData = new FormData();
+    formData.append("tsv_text", tsvData);
+    $.ajax({
+      url: "/find_businesses/upload",
+      method: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (data) {
+        renderDataTable(JSON.parse(data));
+      },
+      error: function (xhr) {
+        console.error(xhr.responseText);
+      },
+    });
   }
 }
 
 function autoSave() {
-  localStorage.setItem("saved_tsv", $("#tsv-input").val());
-  localStorage.setItem("saved_instructions", $("#instructions").val());
-  localStorage.setItem("saved_prompt", $("#prompt").val());
+  localStorage.setItem(STORAGE_KEYS.tsv, $("#tsv-input").val());
+  localStorage.setItem(STORAGE_KEYS.instructions, $("#instructions").val());
+  localStorage.setItem(STORAGE_KEYS.prompt, $("#prompt").val());
 }
 
 $(document).ready(function () {
@@ -64,20 +82,8 @@ $("#upload-form").on("submit", function (e) {
   });
 });
 
-$("#save-setup-btn").on("click", function () {
-  localStorage.setItem("saved_tsv", $("#tsv-input").val());
-  localStorage.setItem("saved_instructions", $("#instructions").val());
-  localStorage.setItem("saved_prompt", $("#prompt").val());
-});
-
 $("#clear-step1").on("click", function () {
-  $("#tsv-input").val("");
-  $("#instructions").val("");
-  $("#prompt").val("");
   $("#table-container").empty();
-  localStorage.removeItem("saved_tsv");
-  localStorage.removeItem("saved_instructions");
-  localStorage.removeItem("saved_prompt");
 });
 
 function renderDataTable(data) {

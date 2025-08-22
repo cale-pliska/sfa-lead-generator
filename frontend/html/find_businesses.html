@@ -29,7 +29,6 @@
         <label>Paste TSV Data:</label><br>
         <textarea name="tsv_text" id="tsv-input"></textarea><br>
         <button type="submit">Load Data</button>
-        <button type="button" id="save-setup-btn">Save Setup</button>
         <button type="button" id="clear-step1">Clear Step 1</button>
     </form>
 
@@ -52,7 +51,8 @@
         <input type="number" id="end-index" value="0" min="0"><br>
         <button id="process-single-btn">Process Single Row</button>
         <button id="process-range-btn">Process Range</button>
-        <button type="button" id="clear-step2">Clear Step 2</button>
+        <button type="button" id="cancel-step2">Cancel Processing</button>
+        <button type="button" id="clear-step2">Clear Results</button>
     </div>
     <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
 </div>
@@ -61,6 +61,7 @@
      <h2>STEP 3: Parse Businesses</h2>
     <button id="parse-btn">Parse Step 2 Results</button>
     <button type="button" id="clear-step3">Clear Step 3</button>
+    <button type="button" id="copy-step3-results">Copy Results</button>
     <div id="contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
  </div>
 

@@ -1,4 +1,7 @@
+const RESULTS_KEY = "generate_contacts_step2_results";
 var step2Results = {};
+var cancelProcessing = false;
+var currentRequest = null;
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -58,12 +61,14 @@ $("#process-range-btn").on("click", function () {
     indexes.push(i);
   }
 
+  cancelProcessing = false;
+
   function processNext(pos) {
-    if (pos >= indexes.length) return;
+    if (cancelProcessing || pos >= indexes.length) return;
     var idx = indexes[pos];
     function send(attempt) {
-      $.ajax({
-        url: "/process_single",
+      currentRequest = $.ajax({
+        url: "/generate_contacts/process_single",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify({
@@ -75,21 +80,25 @@ $("#process-range-btn").on("click", function () {
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
-          localStorage.setItem("saved_results", JSON.stringify(step2Results));
-          setTimeout(function () {
-            processNext(pos + 1);
-          }, 300);
-        },
-        error: function (xhr) {
-          console.error("Error processing row", idx, xhr.responseText);
-          if (attempt < 1) {
-            setTimeout(function () {
-              send(attempt + 1);
-            }, 300);
-          } else {
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+          if (!cancelProcessing) {
             setTimeout(function () {
               processNext(pos + 1);
             }, 300);
+          }
+        },
+        error: function (xhr) {
+          console.error("Error processing row", idx, xhr.responseText);
+          if (!cancelProcessing) {
+            if (attempt < 1) {
+              setTimeout(function () {
+                send(attempt + 1);
+              }, 300);
+            } else {
+              setTimeout(function () {
+                processNext(pos + 1);
+              }, 300);
+            }
           }
         },
       });
@@ -104,7 +113,7 @@ $("#process-single-btn").on("click", function () {
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
   $.ajax({
-    url: "/process_single",
+    url: "/generate_contacts/process_single",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({
@@ -116,12 +125,19 @@ $("#process-single-btn").on("click", function () {
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
     },
     error: function (xhr) {
-      alert(xhr.responseText);
+      console.error("Error processing row", rowIndex, xhr.responseText);
     },
   });
+});
+
+$("#cancel-step2").on("click", function () {
+  cancelProcessing = true;
+  if (currentRequest) {
+    currentRequest.abort();
+  }
 });
 
 $(document).ready(function () {
@@ -157,7 +173,7 @@ Example output:
   { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
 ]`;
   $("#instructions").val(defaultInstructions);
-  var defaultPrompt = "{Business_Name}";
+  var defaultPrompt = "{business_name} {website}";
   var savedPrompt = localStorage.getItem("generate_contacts_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
@@ -168,7 +184,7 @@ Example output:
     localStorage.setItem("generate_contacts_step2_prompt", $(this).val());
   });
 
-  var saved = localStorage.getItem("saved_results");
+  var saved = localStorage.getItem(RESULTS_KEY);
   if (saved) {
     try {
       step2Results = JSON.parse(saved);
@@ -181,15 +197,12 @@ Example output:
   $("#clear-step2").on("click", function () {
     step2Results = {};
     $("#results-container").empty();
-    $("#prompt").val(defaultPrompt);
-    $("#instructions").val(defaultInstructions);
-    localStorage.removeItem("saved_results");
-    localStorage.removeItem("generate_contacts_step2_prompt");
+    localStorage.removeItem(RESULTS_KEY);
   });
 });
 
 $(window).on("beforeunload", function () {
   localStorage.setItem("generate_contacts_step2_prompt", $("#prompt").val());
-  localStorage.setItem("saved_results", JSON.stringify(step2Results));
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
 });
 

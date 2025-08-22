@@ -1,4 +1,7 @@
+const RESULTS_KEY = "find_businesses_step2_results";
 var step2Results = {};
+var cancelProcessing = false;
+var currentRequest = null;
 
 function getBusinessNameKey(obj) {
   for (var key in obj) {
@@ -58,11 +61,13 @@ $("#process-range-btn").on("click", function () {
     indexes.push(i);
   }
 
+  cancelProcessing = false;
+
   function processNext(pos) {
-    if (pos >= indexes.length) return;
+    if (cancelProcessing || pos >= indexes.length) return;
     var idx = indexes[pos];
     function send(attempt) {
-      $.ajax({
+      currentRequest = $.ajax({
         url: "/find_businesses/process_single",
         method: "POST",
         contentType: "application/json",
@@ -75,21 +80,25 @@ $("#process-range-btn").on("click", function () {
           data.index = idx;
           step2Results[idx] = data;
           renderResultsTable(step2Results);
-          localStorage.setItem("saved_results", JSON.stringify(step2Results));
-          setTimeout(function () {
-            processNext(pos + 1);
-          }, 300);
-        },
-        error: function (xhr) {
-          console.error("Error processing row", idx, xhr.responseText);
-          if (attempt < 1) {
-            setTimeout(function () {
-              send(attempt + 1);
-            }, 300);
-          } else {
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+          if (!cancelProcessing) {
             setTimeout(function () {
               processNext(pos + 1);
             }, 300);
+          }
+        },
+        error: function (xhr) {
+          console.error("Error processing row", idx, xhr.responseText);
+          if (!cancelProcessing) {
+            if (attempt < 1) {
+              setTimeout(function () {
+                send(attempt + 1);
+              }, 300);
+            } else {
+              setTimeout(function () {
+                processNext(pos + 1);
+              }, 300);
+            }
           }
         },
       });
@@ -116,12 +125,19 @@ $("#process-single-btn").on("click", function () {
       data.index = rowIndex;
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
-      localStorage.setItem("saved_results", JSON.stringify(step2Results));
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
     },
     error: function (xhr) {
       alert(xhr.responseText);
     },
   });
+});
+
+$("#cancel-step2").on("click", function () {
+  cancelProcessing = true;
+  if (currentRequest) {
+    currentRequest.abort();
+  }
 });
 
 $(document).ready(function () {
@@ -137,7 +153,7 @@ Each object must contain:
 
 DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#instructions").val(defaultInstructions);
-  var defaultPrompt = "{Locations}";
+  var defaultPrompt = "{Location}";
   var savedPrompt = localStorage.getItem("find_businesses_step2_prompt");
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
@@ -148,7 +164,7 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
     localStorage.setItem("find_businesses_step2_prompt", $(this).val());
   });
 
-  var saved = localStorage.getItem("saved_results");
+  var saved = localStorage.getItem(RESULTS_KEY);
   if (saved) {
     try {
       step2Results = JSON.parse(saved);
@@ -161,14 +177,11 @@ DO NOT return any explanation, description, or formatting outside the JSON.`;
   $("#clear-step2").on("click", function () {
     step2Results = {};
     $("#results-container").empty();
-    $("#prompt").val(defaultPrompt);
-    $("#instructions").val(defaultInstructions);
-    localStorage.removeItem("saved_results");
-    localStorage.removeItem("find_businesses_step2_prompt");
+    localStorage.removeItem(RESULTS_KEY);
   });
 });
 
 $(window).on("beforeunload", function () {
   localStorage.setItem("find_businesses_step2_prompt", $("#prompt").val());
-  localStorage.setItem("saved_results", JSON.stringify(step2Results));
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
 });

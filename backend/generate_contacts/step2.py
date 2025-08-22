@@ -1,12 +1,14 @@
 from flask import Blueprint, jsonify, request
+import pandas as pd
 
 from . import data_store
 from .processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
-step2_bp = Blueprint("step2", __name__)
+# Blueprint for Step 2 of Generate Contacts
+step2_bp = Blueprint("generate_contacts_step2", __name__)
 
 
-@step2_bp.route("/process", methods=["POST"])
+@step2_bp.route("/generate_contacts/process", methods=["POST"])
 def process():
     """Apply the prompt to the entire DataFrame."""
     prompt = request.json.get("prompt", "")
@@ -15,7 +17,7 @@ def process():
     return jsonify(results)
 
 
-@step2_bp.route("/process_single", methods=["POST"])
+@step2_bp.route("/generate_contacts/process_single", methods=["POST"])
 def process_single():
     """Process a single row of data."""
     prompt = request.json.get("prompt", "")
@@ -31,6 +33,7 @@ def process_single():
 
     row = data_store.DATAFRAME.iloc[row_index]
     result = apply_prompt_to_row(row, instructions, prompt)
-    new_row = row.to_dict()
+    # Replace NaN values with None to ensure valid JSON
+    new_row = row.where(pd.notna(row), None).to_dict()
     new_row["result"] = result
     return jsonify(new_row)
