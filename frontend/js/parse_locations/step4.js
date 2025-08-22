@@ -2,6 +2,24 @@ console.log('step4.js loaded');
 
 let step4Results = [];
 
+function copyTableToClipboard(selector) {
+    const table = $(selector);
+    if (table.length === 0) {
+        alert('No data to copy.');
+        return;
+    }
+    const rows = [];
+    table.find('tr').each(function () {
+        const cols = [];
+        $(this).find('th,td').each(function () {
+            cols.push($(this).text());
+        });
+        rows.push(cols.join('\t'));
+    });
+    const tsv = rows.join('\n');
+    navigator.clipboard.writeText(tsv);
+}
+
 function renderStep4Table(rows, replace = false) {
     let table = $('#step4-results-table');
     if (table.length === 0) {
@@ -126,5 +144,9 @@ $(document).ready(function () {
     $('#clear-step4').on('click', function () {
         $('#step4-results-table').remove();
         step4Results = [];
+    });
+
+    $('#copy-step4-results').on('click', function () {
+        copyTableToClipboard('#step4-results-table');
     });
 });
