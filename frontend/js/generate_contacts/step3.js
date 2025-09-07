@@ -15,7 +15,21 @@ function copyTableToClipboard(selector) {
     rows.push(cols.join('\t'));
   });
   var tsv = rows.join('\n');
-  navigator.clipboard.writeText(tsv);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(tsv).catch(function () {
+      fallbackCopy(tsv);
+    });
+  } else {
+    fallbackCopy(tsv);
+  }
+}
+
+function fallbackCopy(text) {
+  var temp = $('<textarea>');
+  $('body').append(temp);
+  temp.val(text).select();
+  document.execCommand('copy');
+  temp.remove();
 }
 
 $(document).ready(function () {
