@@ -3,21 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>SFA Lead Generator</title>
-    <style>
-        .scrollable-output {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-<h1>SFA Lead Generator</h1>
- <nav>
-     <a href="{{ url_for('step1.index') }}">Home</a> |
-     <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
-     <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
-     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
- </nav>
- <p>Welcome to SFA Lead Generator.</p>
+    <nav>
+        <div class="font-semibold text-xl">SFA Lead Generator</div>
+        <div>
+            <a href="{{ url_for('step1.index') }}">Home</a>
+            <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a>
+            <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a>
+            <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Take Your Lead Generation to New Heights</h1>
+        <p>Parse locations, discover businesses, and generate contacts with ease.</p>
+        <div class="mt-6">
+            <a href="{{ url_for('parse_locations.parse_locations') }}" class="btn btn-primary mr-2">Get Started</a>
+            <a href="{{ url_for('find_businesses.find_businesses') }}" class="btn btn-secondary">Learn More</a>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="card">
+                <h2 class="text-lg font-semibold mb-2">Parse Locations</h2>
+                <p>Break down regions and cities to focus your outreach.</p>
+            </div>
+            <div class="card">
+                <h2 class="text-lg font-semibold mb-2">Find Businesses</h2>
+                <p>Identify relevant businesses based on your criteria.</p>
+            </div>
+            <div class="card">
+                <h2 class="text-lg font-semibold mb-2">Generate Contacts</h2>
+                <p>Create detailed contact lists for targeted campaigns.</p>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

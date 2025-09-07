@@ -3,70 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>SFA Lead Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <style>
-        table { border-collapse: collapse; margin-top: 1em; }
-        th, td { border: 1px solid #ccc; padding: 4px; }
-        textarea { width: 100%; height: 150px; }
-        .scrollable-output {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-    </style>
 </head>
 <body>
- <h1>SFA Lead Generator</h1>
- <nav>
-     <a href="{{ url_for('step1.index') }}">Home</a> |
-     <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
-     <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
-     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
- </nav>
+    <nav>
+        <div class="font-semibold text-xl">SFA Lead Generator</div>
+        <div>
+            <a href="{{ url_for('step1.index') }}">Home</a>
+            <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a>
+            <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a>
+            <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+        </div>
+    </nav>
 
-<div id="step1">
-    <h2>STEP 1: Initial Data Load</h2>
-    <form id="upload-form" method="post" enctype="multipart/form-data">
-        <label>Paste TSV Data:</label><br>
-        <textarea name="tsv_text" id="tsv-input"></textarea><br>
-        <button type="submit">Load Data</button>
-        <button type="button" id="clear-step1">Clear Step 1</button>
-    </form>
+    <div class="container">
+        <h1 class="text-2xl font-bold mb-4">Find Businesses</h1>
+        <div id="step1" class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">STEP 1: Initial Data Load</h2>
+            <form id="upload-form" method="post" enctype="multipart/form-data">
+                <label>Paste TSV Data:</label><br>
+                <textarea name="tsv_text" id="tsv-input"></textarea><br>
+                <button type="submit">Load Data</button>
+                <button type="button" id="clear-step1" class="btn-secondary">Clear Step 1</button>
+            </form>
+            <div id="table-container" class="scrollable-output mt-4"></div>
+        </div>
 
+        <div id="step2" class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">STEP 2: Find Businesses</h2>
+            <div id="process-section">
+                <label>Instructions:</label><br>
+                <textarea id="instructions" style="height:80px;"></textarea><br>
+                <label>Prompt (use column names in {braces}):</label><br>
+                <textarea id="prompt" style="height:100px;"></textarea><br>
+                <label>Row index for single run:</label>
+                <input type="number" id="row-index" value="0" min="0"><br>
+                <label>Start index:</label>
+                <input type="number" id="start-index" value="0" min="0">
+                <label>End index:</label>
+                <input type="number" id="end-index" value="0" min="0"><br>
+                <button id="process-single-btn">Process Single Row</button>
+                <button id="process-range-btn">Process Range</button>
+                <button type="button" id="cancel-step2" class="btn-secondary">Cancel Processing</button>
+                <button type="button" id="clear-step2" class="btn-secondary">Clear Results</button>
+            </div>
+            <div id="results-container" class="scrollable-output mt-4"></div>
+        </div>
 
-    <div id="table-container" class="scrollable-output"></div>
-</div>
-
- <div id="step2" style="margin-top:2em;">
-     <h2>STEP 2: Find Businesses</h2>
-    <div id="process-section">
-        <label>Instructions:</label><br>
-        <textarea id="instructions" style="height:80px;"></textarea><br>
-        <label>Prompt (use column names in {braces}):</label><br>
-          <textarea id="prompt" style="height:100px;"></textarea><br>
-        <label>Row index for single run:</label>
-        <input type="number" id="row-index" value="0" min="0"><br>
-        <label>Start index:</label>
-        <input type="number" id="start-index" value="0" min="0">
-        <label>End index:</label>
-        <input type="number" id="end-index" value="0" min="0"><br>
-        <button id="process-single-btn">Process Single Row</button>
-        <button id="process-range-btn">Process Range</button>
-        <button type="button" id="cancel-step2">Cancel Processing</button>
-        <button type="button" id="clear-step2">Clear Results</button>
+        <div id="step3">
+            <h2 class="text-xl font-semibold mb-2">STEP 3: Parse Businesses</h2>
+            <button id="parse-btn">Parse Step 2 Results</button>
+            <button type="button" id="clear-step3" class="btn-secondary">Clear Step 3</button>
+            <button type="button" id="copy-step3-results" class="btn-secondary">Copy Results</button>
+            <div id="contacts-container" class="scrollable-output mt-4"></div>
+        </div>
     </div>
-    <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
-</div>
 
- <div id="step3" style="margin-top:2em;">
-     <h2>STEP 3: Parse Businesses</h2>
-    <button id="parse-btn">Parse Step 2 Results</button>
-    <button type="button" id="clear-step3">Clear Step 3</button>
-    <button type="button" id="copy-step3-results">Copy Results</button>
-    <div id="contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
- </div>
-
- <script src="{{ url_for('static', filename='find_businesses/step1.js') }}"></script>
- <script src="{{ url_for('static', filename='find_businesses/step2.js') }}"></script>
- <script src="{{ url_for('static', filename='find_businesses/step3.js') }}"></script>
+    <script src="{{ url_for('static', filename='find_businesses/step1.js') }}"></script>
+    <script src="{{ url_for('static', filename='find_businesses/step2.js') }}"></script>
+    <script src="{{ url_for('static', filename='find_businesses/step3.js') }}"></script>
 </body>
 </html>

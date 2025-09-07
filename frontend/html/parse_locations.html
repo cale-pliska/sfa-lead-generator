@@ -3,73 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>Parse Locations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <style>
-        .scrollable-output {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-    </style>
 </head>
 <body>
-<h1>Parse Locations</h1>
- <nav>
-     <a href="{{ url_for('step1.index') }}">Home</a> |
-     <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
-     <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
-     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
- </nav>
+    <nav>
+        <div class="font-semibold text-xl">SFA Lead Generator</div>
+        <div>
+            <a href="{{ url_for('step1.index') }}">Home</a>
+            <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a>
+            <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a>
+            <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+        </div>
+    </nav>
 
-<div id="step1">
-    <h2>STEP 1: Setup</h2>
-    <form id="parse-locations-form">
-        <label for="location">Location:</label><br>
-        <input type="text" id="location" name="location"><br>
-        <small>This value is used to look up its population.</small><br><br>
+    <div class="container">
+        <h1 class="text-2xl font-bold mb-4">Parse Locations</h1>
+        <div id="step1" class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">STEP 1: Setup</h2>
+            <form id="parse-locations-form">
+                <label for="location">Location:</label><br>
+                <input type="text" id="location" name="location"><br>
+                <small class="text-gray-500">This value is used to look up its population.</small><br><br>
+                <button type="submit">Submit</button>
+                <button type="button" id="save-step1" class="btn-secondary">Save Step 1</button>
+                <button type="button" id="clear-step1" class="btn-secondary">Clear Step 1</button>
+            </form>
+            <div id="step1-results-container" class="scrollable-output mt-4"></div>
+        </div>
+        <div id="step2" class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">STEP 2: Query</h2>
+            <label for="gpt-instructions-step2">GPT Instructions:</label><br>
+            <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50" readonly></textarea><br><br>
+            <button id="process-single">Process Single</button>
+            <button type="button" id="save-step2" class="btn-secondary">Save Step 2</button>
+            <button type="button" id="clear-step2" class="btn-secondary">Clear Step 2</button>
+            <div id="step2-results-container" class="scrollable-output mt-4"></div>
+        </div>
+        <div id="step3" class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">STEP 3: Parse Locations</h2>
+            <button id="parse-data">Parse Data</button>
+            <button type="button" id="save-step3" class="btn-secondary">Save Step 3</button>
+            <button type="button" id="clear-step3" class="btn-secondary">Clear Step 3</button>
+            <button type="button" id="copy-step3-results" class="btn-secondary">Copy Results</button>
+            <div id="step3-results-container" class="scrollable-output mt-4"></div>
+        </div>
+        <div id="step4">
+            <h2 class="text-xl font-semibold mb-2">STEP 4: Recursive Search</h2>
+            <label for="population-stop-depth">Population Stop Depth:</label><br>
+            <input type="number" id="population-stop-depth" value="100000"><br><br>
+            <button id="process-recursive">Process All</button>
+            <button type="button" id="cancel-step4" class="btn-secondary">Cancel Processing</button>
+            <button type="button" id="clear-step4" class="btn-secondary">Clear Results</button>
+            <button type="button" id="copy-step4-results" class="btn-secondary">Copy Results</button>
+            <div id="step4-results-container" class="scrollable-output mt-4"></div>
+        </div>
+    </div>
 
-        <button type="submit">Submit</button>
-        <button type="button" id="save-step1">Save Step 1</button>
-        <button type="button" id="clear-step1">Clear Step 1</button>
-    </form>
-
-    <div id="step1-results-container" class="scrollable-output"></div>
-</div>
-
-<div id="step2">
-    <h2>STEP 2: Query</h2>
-    <label for="gpt-instructions-step2">GPT Instructions:</label><br>
-    <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50" readonly></textarea><br><br>
-
-    <button id="process-single">Process Single</button>
-    <button type="button" id="save-step2">Save Step 2</button>
-    <button type="button" id="clear-step2">Clear Step 2</button>
-
-    <div id="step2-results-container" class="scrollable-output"></div>
-</div>
-
-<div id="step3">
-    <h2>STEP 3: Parse Locations</h2>
-    <button id="parse-data">Parse Data</button>
-    <button type="button" id="save-step3">Save Step 3</button>
-    <button type="button" id="clear-step3">Clear Step 3</button>
-    <button type="button" id="copy-step3-results">Copy Results</button>
-    <div id="step3-results-container" class="scrollable-output"></div>
-</div>
-
-<div id="step4">
-    <h2>STEP 4: Recursive Search</h2>
-    <label for="population-stop-depth">Population Stop Depth:</label><br>
-    <input type="number" id="population-stop-depth" value="100000"><br><br>
-    <button id="process-recursive">Process All</button>
-    <button type="button" id="cancel-step4">Cancel Processing</button>
-    <button type="button" id="clear-step4">Clear Results</button>
-    <button type="button" id="copy-step4-results">Copy Results</button>
-    <div id="step4-results-container" class="scrollable-output"></div>
-</div>
-
-<script src="{{ url_for('static', filename='parse_locations/step1.js') }}"></script>
-<script src="{{ url_for('static', filename='parse_locations/step2.js') }}"></script>
-<script src="{{ url_for('static', filename='parse_locations/step3.js') }}"></script>
-<script src="{{ url_for('static', filename='parse_locations/step4.js') }}"></script>
+    <script src="{{ url_for('static', filename='parse_locations/step1.js') }}"></script>
+    <script src="{{ url_for('static', filename='parse_locations/step2.js') }}"></script>
+    <script src="{{ url_for('static', filename='parse_locations/step3.js') }}"></script>
+    <script src="{{ url_for('static', filename='parse_locations/step4.js') }}"></script>
 </body>
 </html>
