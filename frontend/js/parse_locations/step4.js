@@ -19,7 +19,21 @@ function copyTableToClipboard(selector) {
         rows.push(cols.join('\t'));
     });
     const tsv = rows.join('\n');
-    navigator.clipboard.writeText(tsv);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tsv).catch(function () {
+            fallbackCopy(tsv);
+        });
+    } else {
+        fallbackCopy(tsv);
+    }
+}
+
+function fallbackCopy(text) {
+    const temp = $('<textarea>');
+    $('body').append(temp);
+    temp.val(text).select();
+    document.execCommand('copy');
+    temp.remove();
 }
 
 function renderStep4Table(rows, replace = false) {
