@@ -15,7 +15,7 @@
     </style>
 </head>
 <body>
- <h1>SFA Lead Generator</h1>
+<h1>SFA Lead Generator</h1>
  <nav>
      <a href="{{ url_for('step1.index') }}">Home</a> |
      <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
@@ -37,8 +37,8 @@
     <div id="table-container" class="scrollable-output"></div>
 </div>
 
- <div id="step2" style="margin-top:2em;">
-     <h2>STEP 2: Find Businesses</h2>
+<div id="step2" style="margin-top:2em;">
+    <h2>STEP 2: Prioritize Businesses</h2>
     <div id="process-section">
         <label>Instructions:</label><br>
         <textarea id="instructions" style="height:80px;"></textarea><br>
@@ -54,20 +54,21 @@
         <button id="process-range-btn">Process Range</button>
         <button type="button" id="cancel-step2">Cancel Processing</button>
         <button type="button" id="clear-step2">Clear Results</button>
+
     </div>
     <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
 </div>
 
- <div id="step3" style="margin-top:2em;">
-     <h2>STEP 3: Parse Businesses</h2>
+<div id="step3" style="margin-top:2em;">
+    <h2>STEP 3: Parse Priorities</h2>
     <button id="parse-btn">Parse Step 2 Results</button>
     <button type="button" id="clear-step3">Clear Step 3</button>
     <button type="button" id="copy-step3-results">Copy Results</button>
     <div id="contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
- </div>
+</div>
 
- <script src="{{ url_for('static', filename='find_businesses/step1.js') }}"></script>
- <script src="{{ url_for('static', filename='find_businesses/step2.js') }}"></script>
- <script src="{{ url_for('static', filename='find_businesses/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='prioritize_businesses/step1.js') }}"></script>
+<script src="{{ url_for('static', filename='prioritize_businesses/step2.js') }}"></script>
+<script src="{{ url_for('static', filename='prioritize_businesses/step3.js') }}"></script>
 </body>
 </html>
