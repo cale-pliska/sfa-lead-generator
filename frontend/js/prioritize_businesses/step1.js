@@ -4,6 +4,8 @@ const STORAGE_KEYS = {
   prompt: "prioritize_businesses_step1_prompt",
 };
 
+let loadedData = [];
+
 function loadSavedSetup() {
   const savedTsv = localStorage.getItem(STORAGE_KEYS.tsv) || "";
   const savedInstructions =
@@ -37,7 +39,8 @@ function autoPopulateFromSaved() {
       processData: false,
       contentType: false,
       success: function (data) {
-        renderDataTable(JSON.parse(data));
+        loadedData = JSON.parse(data);
+        renderDataTable(loadedData);
       },
       error: function (xhr) {
         console.error(xhr.responseText);
@@ -68,7 +71,8 @@ $("#upload-form").on("submit", function (e) {
     processData: false,
     contentType: false,
     success: function (data) {
-      renderDataTable(JSON.parse(data));
+      loadedData = JSON.parse(data);
+      renderDataTable(loadedData);
       autoSave();
     },
     error: function (xhr) {
@@ -79,6 +83,36 @@ $("#upload-form").on("submit", function (e) {
 
 $("#clear-step1").on("click", function () {
   $("#table-container").empty();
+  loadedData = [];
+});
+
+$("#remove-duplicates").on("click", function () {
+  if (!loadedData.length) {
+    alert("Please load data before removing duplicates.");
+    return;
+  }
+  const seen = new Set();
+  const deduped = loadedData.filter((row) => {
+    const name = (row["business_name"] || "").toLowerCase();
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+  if (deduped.length === loadedData.length) {
+    alert("No duplicate businesses found.");
+    renderDataTable(loadedData);
+    return;
+  }
+  loadedData = deduped;
+  renderDataTable(loadedData);
+  const columns = Object.keys(loadedData[0]);
+  const tsv = [columns.join("\t")] 
+    .concat(
+      loadedData.map((row) => columns.map((col) => row[col]).join("\t"))
+    )
+    .join("\n");
+  $("#tsv-input").val(tsv);
+  autoSave();
 });
 
 function renderDataTable(data) {
@@ -101,3 +135,4 @@ function renderDataTable(data) {
   html += "</tbody></table>";
   $("#table-container").html(html);
 }
+
