@@ -120,13 +120,13 @@ function renderDataTable(data) {
     $("#table-container").html("No rows");
     return;
   }
-  var html = "<table><thead><tr>";
+  var html = "<table><thead><tr><th>index</th>";
   Object.keys(data[0]).forEach(function (col) {
     html += "<th>" + col + "</th>";
   });
   html += "</tr></thead><tbody>";
-  data.forEach(function (row) {
-    html += "<tr>";
+  data.forEach(function (row, idx) {
+    html += "<tr><td>" + idx + "</td>";
     Object.values(row).forEach(function (val) {
       html += "<td>" + val + "</td>";
     });
