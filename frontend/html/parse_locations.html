@@ -28,6 +28,9 @@
         <input type="text" id="location" name="location"><br>
         <small>This value is used to look up its population.</small><br><br>
 
+        <label for="min-pop-subgroup-size">Minimum Population Subgroup Size:</label><br>
+        <input type="number" id="min-pop-subgroup-size" value="25000"><br><br>
+
         <button type="submit">Submit</button>
         <button type="button" id="save-step1">Save Step 1</button>
         <button type="button" id="clear-step1">Clear Step 1</button>
@@ -39,7 +42,7 @@
 <div id="step2">
     <h2>STEP 2: Query</h2>
     <label for="gpt-instructions-step2">GPT Instructions:</label><br>
-    <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50" readonly></textarea><br><br>
+    <textarea id="gpt-instructions-step2" name="gpt_instructions_step2" rows="4" cols="50"></textarea><br><br>
 
     <button id="process-single">Process Single</button>
     <button type="button" id="save-step2">Save Step 2</button>
