@@ -28,13 +28,16 @@ function renderResults(results, replace = false) {
 }
 
 $(document).ready(function () {
-    $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS).prop('readonly', true);
+    $('#gpt-instructions-step2').val(DEFAULT_INSTRUCTIONS);
     const saved = localStorage.getItem('parse_locations_step2');
     if (saved) {
         try {
             const data = JSON.parse(saved);
             step2Results = data.results || [];
             renderResults(step2Results, true);
+            if (data.instructions) {
+                $('#gpt-instructions-step2').val(data.instructions);
+            }
         } catch (e) {
             console.error(e);
         }
@@ -55,7 +58,7 @@ $(document).ready(function () {
     }
 
     $('#process-single').on('click', function () {
-        const instructions = DEFAULT_INSTRUCTIONS;
+        const instructions = $('#gpt-instructions-step2').val();
 
         const rows = gatherRows();
         if (rows.length === 0) {
@@ -87,6 +90,7 @@ $(document).ready(function () {
     $('#save-step2').on('click', function () {
         localStorage.setItem('parse_locations_step2', JSON.stringify({
             results: step2Results,
+            instructions: $('#gpt-instructions-step2').val(),
         }));
     });
 

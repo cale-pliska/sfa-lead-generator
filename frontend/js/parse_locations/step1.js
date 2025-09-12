@@ -26,7 +26,14 @@ $(document).ready(function () {
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            renderStep1Table(data, true);
+            if (Array.isArray(data)) {
+                renderStep1Table(data, true);
+            } else {
+                renderStep1Table(data.rows || [], true);
+                if (data.min_subgroup_size !== undefined) {
+                    $('#min-pop-subgroup-size').val(data.min_subgroup_size);
+                }
+            }
         } catch (e) {
             console.error(e);
         }
@@ -64,11 +71,16 @@ $(document).ready(function () {
                 population: $(this).find('td').eq(1).text(),
             });
         });
-        localStorage.setItem('parse_locations_step1', JSON.stringify(rows));
+        const minSize = $('#min-pop-subgroup-size').val();
+        localStorage.setItem('parse_locations_step1', JSON.stringify({
+            rows: rows,
+            min_subgroup_size: minSize,
+        }));
     });
 
     $('#clear-step1').on('click', function () {
         $('#step1-results-table').remove();
+        $('#min-pop-subgroup-size').val('25000');
         localStorage.removeItem('parse_locations_step1');
     });
 });
