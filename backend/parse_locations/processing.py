@@ -44,16 +44,21 @@ def request_population(location: str) -> int:
     return _parse_population(raw_result)
 
 
-def _build_prompt(location: str, population: str) -> str:
+def _build_prompt(location: str, population: str, min_subgroup_size: str) -> str:
     """Create the prompt used for custom GPT queries."""
-    return f"Location: {location}\nPopulation: {population}"
+    return (
+        f"Location: {location}\n"
+        f"Population: {population}\n"
+        f"Minimum Population Subgroup Size: {min_subgroup_size}"
+    )
 
 
 def process_entry(instructions: str, entry: Dict[str, str]) -> Dict[str, str]:
     """Call GPT for a single entry and return the raw result."""
     location = entry.get("location", "")
     population = entry.get("population", "")
-    prompt = _build_prompt(location, population)
+    min_subgroup_size = entry.get("min_subgroup_size", "")
+    prompt = _build_prompt(location, population, min_subgroup_size)
     raw_data = call_openai(instructions, prompt, model="gpt-4o")
     return {"location": location, "raw_data": raw_data}
 

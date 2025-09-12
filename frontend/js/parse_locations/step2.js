@@ -49,9 +49,11 @@ $(document).ready(function () {
             if (index === 0) return; // skip header
             const location = $(this).find('td').eq(0).text();
             const population = $(this).find('td').eq(1).text();
+            const minSize = $(this).find('td').eq(2).text();
             rows.push({
                 location: location,
                 population: population,
+                min_subgroup_size: minSize,
             });
         });
         return rows;
