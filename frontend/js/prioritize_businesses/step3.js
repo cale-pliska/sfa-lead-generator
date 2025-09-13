@@ -1,4 +1,4 @@
-var parsedContacts = [];
+var parsedPriorities = [];
 
 function copyTableToClipboard(selector) {
   var table = $(selector);
@@ -33,20 +33,20 @@ function fallbackCopy(text) {
 }
 
 $(document).ready(function () {
-  var saved = localStorage.getItem("prioritize_businesses_saved_contacts");
+  var saved = localStorage.getItem("prioritize_businesses_saved_priorities");
   if (saved) {
     try {
-      parsedContacts = JSON.parse(saved);
-      renderContactsTable(parsedContacts);
+      parsedPriorities = JSON.parse(saved);
+      renderPrioritiesTable(parsedPriorities);
     } catch (e) {
       console.error(e);
     }
   }
 });
 
-function renderContactsTable(data) {
+function renderPrioritiesTable(data) {
   if (!data.length) {
-    $("#contacts-container").html("No contacts");
+    $("#priorities-container").html("No data");
     return;
   }
   var cols = Object.keys(data[0]);
@@ -55,7 +55,7 @@ function renderContactsTable(data) {
     if (b === "business_name") return 1;
     return 0;
   });
-  var html = '<table id="contacts-results-table"><thead><tr>';
+  var html = '<table id="priorities-results-table"><thead><tr>';
   cols.forEach(function (col) {
     html += "<th>" + col + "</th>";
   });
@@ -68,7 +68,7 @@ function renderContactsTable(data) {
     html += "</tr>";
   });
   html += "</tbody></table>";
-  $("#contacts-container").html(html);
+  $("#priorities-container").html(html);
 }
 
 $("#parse-btn").on("click", function () {
@@ -77,14 +77,17 @@ $("#parse-btn").on("click", function () {
     return;
   }
   $.ajax({
-    url: "/prioritize_businesses/parse_contacts",
+    url: "/prioritize_businesses/parse_priorities",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({ results: Object.values(step2Results) }),
     success: function (data) {
-      parsedContacts = parsedContacts.concat(data);
-      renderContactsTable(parsedContacts);
-      localStorage.setItem("prioritize_businesses_saved_contacts", JSON.stringify(parsedContacts));
+      parsedPriorities = parsedPriorities.concat(data);
+      renderPrioritiesTable(parsedPriorities);
+      localStorage.setItem(
+        "prioritize_businesses_saved_priorities",
+        JSON.stringify(parsedPriorities)
+      );
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -93,11 +96,11 @@ $("#parse-btn").on("click", function () {
 });
 
 $("#clear-step3").on("click", function () {
-  $("#contacts-container").empty();
-  parsedContacts = [];
-  localStorage.removeItem("prioritize_businesses_saved_contacts");
+  $("#priorities-container").empty();
+  parsedPriorities = [];
+  localStorage.removeItem("prioritize_businesses_saved_priorities");
 });
 
 $("#copy-step3-results").on("click", function () {
-  copyTableToClipboard('#contacts-results-table');
+  copyTableToClipboard('#priorities-results-table');
 });

@@ -141,37 +141,21 @@ $("#cancel-step2").on("click", function () {
 });
 
 $(document).ready(function () {
-  var defaultInstructions = `You are a contact generation expert for sales.
+  var defaultInstructions = `You are a prioritization expert.  Score each business out of 100 using the following logic.
 
-For the business provided, find all key contacts. Prioritize:
-– Founders
-– COOs
-– Heads of Operations
-– Other senior decision-makers
+- Service Type (max 30 pts): commercial = 30; residential = 6–9; mixed = 18–21.
+- Specialized Offerings (max 30 pts): low voltage = 30; BDA/emergency = 30; security cameras = 21; other security/building tech = 15–18.
+- Company Size (max 20 pts): 10–20 employees = 20 (ideal); 1–9 = 12–14; 21–50 = 10–12; 50+ = 6–9.
+- Company Filter: if company is TK, Otis, Schindler, Kone, Vivint, or ADT, score = 0. Otherwise, apply rules above.
+- Website Presence (±20 pts): clear commercial/low-voltage services = +6; no services = −6; relevant job postings = +3–6; outdated/no site = −6.
 
-Required output format:
-Return results as a JSON array of objects.
-Each object must contain:
-- firstname
-- lastname
-- role
-- email (if you can't find their email directly guess it)
+ONLY RETURN OUTPUTS MATCHING THE EXAMPLE STRUCTURE
 
-⚠️ Do not include company name, emails, or any extra explanation.
-⚠️ Output only the raw JSON.
-
-Example input:
-ABC Company
-
-Example output:
-[
-  { "firstname": "John", "lastname": "Smith", "role": "Founder", "email": "john.smith@abccompany.com" },
-  { "firstname": "Jane", "lastname": "Doe", "role": "COO", "email": "jane.doe@abccompany.com" },
-  { "firstname": "Michael", "lastname": "Johnson", "role": "Head of Operations", "email": "michael.johnson@abccompany.com" },
-  { "firstname": "Ryan", "lastname": "Patel", "role": "Founder", "email": "ryan.patel@abccompany.com" },
-  { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
-  { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
-]`;
+Example outputs: 
+[40, "mostly residential with a strong website and no specialized offerings mentioned"] 
+[12, "residential focus, very small team, no online presence"]
+[92, "commercial, ideal size, multiple specialized services, strong website"]
+[55, "mixed services, mid-size team, cameras only, poor website"]`;
   $("#instructions").val(defaultInstructions);
   var defaultPrompt = "{business_name} {website}";
   var savedPrompt = localStorage.getItem("prioritize_businesses_step2_prompt");
