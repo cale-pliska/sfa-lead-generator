@@ -88,6 +88,40 @@ def parse_results_to_contacts(results):
     return contacts
 
 
+def parse_results_to_priorities(results):
+    """Extract SCORE and SCORE_RATIONAL from step 2 results.
+
+    Each element in ``results`` is expected to be a dict containing the
+    original row data along with a ``result`` string produced by the LLM.
+    The ``result`` should be a JSON array in the format
+    ``[score, "rationale"]``. This function merges the parsed values with the
+    original row data so downstream steps retain full context.
+    """
+
+    parsed = []
+    for row in results:
+        if isinstance(row, dict):
+            raw = row.get("result", "")
+            base_data = {k: v for k, v in row.items() if k != "result"}
+        else:
+            raw = str(row)
+            base_data = {}
+
+        try:
+            data = json.loads(raw)
+            if isinstance(data, list) and len(data) >= 2:
+                score, rationale = data[0], data[1]
+            else:
+                score, rationale = None, raw
+        except json.JSONDecodeError:
+            score, rationale = None, raw
+
+        parsed_row = {**base_data, "SCORE": score, "SCORE_RATIONAL": rationale}
+        parsed.append(parsed_row)
+
+    return parsed
+
+
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
     """Apply the prompt to each row of the dataframe and return results."""
     processed = []
