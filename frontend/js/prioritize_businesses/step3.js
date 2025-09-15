@@ -63,7 +63,11 @@ function renderPrioritiesTable(data) {
   data.forEach(function (row) {
     html += "<tr>";
     cols.forEach(function (k) {
-      html += "<td>" + (row[k] || "") + "</td>";
+      var value = row[k];
+      if (value === null || value === undefined) {
+        value = "";
+      }
+      html += "<td>" + value + "</td>";
     });
     html += "</tr>";
   });
