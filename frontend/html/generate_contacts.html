@@ -61,6 +61,31 @@
 
 <div id="step3" style="margin-top:2em;">
     <h2>STEP 3: Parse Contacts</h2>
+    <label for="schema-definition">Schema Definition:</label><br>
+    <textarea id="schema-definition" style="height:200px;">{
+  "name": "ContactList",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "contacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "first_name": {"type": "string"},
+            "last_name": {"type": "string"},
+            "role": {"type": "string"},
+            "email": {"type": "string"}
+          },
+          "required": ["first_name", "last_name"],
+          "additionalProperties": true
+        }
+      }
+    },
+    "required": ["contacts"],
+    "additionalProperties": false
+  }
+}</textarea><br>
     <button id="parse-btn">Parse Step 2 Results</button>
     <button type="button" id="clear-step3">Clear Step 3</button>
     <button type="button" id="copy-step3-results">Copy Results</button>

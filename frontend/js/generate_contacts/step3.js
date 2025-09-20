@@ -42,6 +42,10 @@ $(document).ready(function () {
       console.error(e);
     }
   }
+  var storedSchema = localStorage.getItem("saved_schema_definition");
+  if (storedSchema) {
+    $("#schema-definition").val(storedSchema);
+  }
 });
 
 function renderContactsTable(data) {
@@ -76,12 +80,20 @@ $("#parse-btn").on("click", function () {
     alert("No Step 2 results to parse");
     return;
   }
+  var schemaDefinition = $("#schema-definition").val();
+  localStorage.setItem("saved_schema_definition", schemaDefinition);
   $.ajax({
     url: "/parse_contacts",
     method: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ results: Object.values(step2Results) }),
+    data: JSON.stringify({
+      results: Object.values(step2Results),
+      schema: schemaDefinition,
+    }),
     success: function (data) {
+      if (!Array.isArray(data) && data && Array.isArray(data.contacts)) {
+        data = data.contacts;
+      }
       parsedContacts = parsedContacts.concat(data);
       renderContactsTable(parsedContacts);
       localStorage.setItem("saved_contacts", JSON.stringify(parsedContacts));

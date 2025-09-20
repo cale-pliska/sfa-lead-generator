@@ -1,8 +1,34 @@
-import pandas as pd
-
 import json
 import re
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
 from ..utilities.openai_helpers import call_openai
+
+DEFAULT_CONTACT_SCHEMA: Dict[str, Any] = {
+    "name": "ContactList",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "contacts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "first_name": {"type": "string"},
+                        "last_name": {"type": "string"},
+                        "role": {"type": "string"},
+                        "email": {"type": "string"},
+                    },
+                    "required": ["first_name", "last_name"],
+                    "additionalProperties": True,
+                },
+            }
+        },
+        "required": ["contacts"],
+        "additionalProperties": False,
+    },
+}
 
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:
@@ -86,6 +112,77 @@ def parse_results_to_contacts(results):
                 contact_data.setdefault("business_name", business_name)
             contacts.append(contact_data)
     return contacts
+
+
+def _load_schema(schema_definition: str) -> Optional[Dict[str, Any]]:
+    """Attempt to parse the provided schema definition as JSON."""
+    schema_text = schema_definition.strip()
+    if not schema_text:
+        return None
+    try:
+        parsed = json.loads(schema_text)
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError:
+        return None
+    return None
+
+
+def format_contacts_with_schema(results: List[Any], schema_definition: str) -> List[Dict[str, Any]]:
+    """Use OpenAI to format contacts so they match the provided schema."""
+
+    base_contacts = parse_results_to_contacts(results)
+    schema_json = _load_schema(schema_definition)
+    schema_text = schema_definition.strip()
+
+    if schema_json is None:
+        if schema_text:
+            schema_for_prompt = schema_text
+        else:
+            schema_for_prompt = json.dumps(DEFAULT_CONTACT_SCHEMA, indent=2)
+        response_schema = json.loads(json.dumps(DEFAULT_CONTACT_SCHEMA))
+    else:
+        schema_for_prompt = json.dumps(schema_json, indent=2)
+        response_schema = schema_json
+
+    if isinstance(response_schema, dict) and "schema" in response_schema and "name" in response_schema:
+        response_format = {"type": "json_schema", "json_schema": response_schema}
+    else:
+        response_format = None
+
+    payload = {
+        "schema_to_follow": schema_for_prompt,
+        "provided_schema_text": schema_text or None,
+        "contacts": base_contacts,
+        "raw_results": results,
+    }
+
+    response = call_openai(
+        instructions=(
+            "You transform semi-structured contact data into JSON that strictly adheres to the provided schema. "
+            "Respond with JSON only."
+        ),
+        message=(
+            "Format the contacts so that they follow the schema_to_follow value. Use null for missing values.\n\n"
+            f"Input:\n{json.dumps(payload, indent=2, default=str)}"
+        ),
+        model="gpt-4o-mini",
+        temperature=0,
+        response_format=response_format,
+    )
+
+    parsed_response = parse_contacts(response)
+
+    if isinstance(parsed_response, dict):
+        contacts = parsed_response.get("contacts")
+        if isinstance(contacts, list):
+            return contacts
+        return [parsed_response]
+
+    if isinstance(parsed_response, list):
+        return parsed_response
+
+    return base_contacts
 
 
 def apply_prompt_to_dataframe(df: pd.DataFrame, instructions: str, prompt: str):
