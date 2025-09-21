@@ -2,7 +2,7 @@ import pandas as pd
 
 import json
 import re
-from ..utilities.openai_helpers import call_openai
+from ...utilities.openai_helpers import call_openai
 
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:

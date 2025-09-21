@@ -12,6 +12,28 @@
             max-height: 300px;
             overflow-y: auto;
         }
+        .method-toggle {
+            margin-top: 1.5em;
+        }
+        .method-toggle button {
+            margin-right: 0.5em;
+            padding: 0.5em 1em;
+            border: 1px solid #1a73e8;
+            background-color: #f1f3f4;
+            color: #1a73e8;
+            cursor: pointer;
+        }
+        .method-toggle button.active {
+            background-color: #1a73e8;
+            color: #fff;
+        }
+        .method-section {
+            display: none;
+            margin-top: 1.5em;
+        }
+        .method-section.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -24,51 +46,82 @@
      <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
  </nav>
 
-<div id="step1">
-    <h2>STEP 1: Initial Data Load</h2>
-    <form id="upload-form" method="post" enctype="multipart/form-data">
-        <label>Paste TSV Data:</label><br>
-        <textarea name="tsv_text" id="tsv-input"></textarea><br>
-        <button type="submit">Load Data</button>
-        <button type="button" id="clear-step1">Clear Step 1</button>
-    </form>
-
-
-    <div id="table-container" class="scrollable-output"></div>
+<div class="method-toggle">
+    <button type="button" class="method-tab active" data-target="simple-method">Simple Method</button>
+    <button type="button" class="method-tab" data-target="guess-method">Guess Method</button>
 </div>
 
-<div id="step2" style="margin-top:2em;">
-    <h2>STEP 2: Generate Contacts</h2>
-    <div id="process-section">
-        <label>Instructions:</label><br>
-        <textarea id="instructions" style="height:80px;"></textarea><br>
-        <label>Prompt (use column names in {braces}):</label><br>
-          <textarea id="prompt" style="height:100px;"></textarea><br>
-        <label>Row index for single run:</label>
-        <input type="number" id="row-index" value="0" min="0"><br>
-        <label>Start index:</label>
-        <input type="number" id="start-index" value="0" min="0">
-        <label>End index:</label>
-        <input type="number" id="end-index" value="0" min="0"><br>
-        <button id="process-single-btn">Process Single Row</button>
-        <button id="process-range-btn">Process Range</button>
-        <button type="button" id="cancel-step2">Cancel Processing</button>
-        <button type="button" id="clear-step2">Clear Results</button>
+<div class="method-content">
+    <section id="simple-method" class="method-section active" aria-hidden="false">
+        <div id="step1">
+            <h2>STEP 1: Initial Data Load</h2>
+            <form id="upload-form" method="post" enctype="multipart/form-data">
+                <label>Paste TSV Data:</label><br>
+                <textarea name="tsv_text" id="tsv-input"></textarea><br>
+                <button type="submit">Load Data</button>
+                <button type="button" id="clear-step1">Clear Step 1</button>
+            </form>
 
-    </div>
-    <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
+            <div id="table-container" class="scrollable-output"></div>
+        </div>
+
+        <div id="step2" style="margin-top:2em;">
+            <h2>STEP 2: Generate Contacts</h2>
+            <div id="process-section">
+                <label>Instructions:</label><br>
+                <textarea id="instructions" style="height:80px;"></textarea><br>
+                <label>Prompt (use column names in {braces}):</label><br>
+                  <textarea id="prompt" style="height:100px;"></textarea><br>
+                <label>Row index for single run:</label>
+                <input type="number" id="row-index" value="0" min="0"><br>
+                <label>Start index:</label>
+                <input type="number" id="start-index" value="0" min="0">
+                <label>End index:</label>
+                <input type="number" id="end-index" value="0" min="0"><br>
+                <button id="process-single-btn">Process Single Row</button>
+                <button id="process-range-btn">Process Range</button>
+                <button type="button" id="cancel-step2">Cancel Processing</button>
+                <button type="button" id="clear-step2">Clear Results</button>
+
+            </div>
+            <div id="results-container" class="scrollable-output" style="margin-top:1em;"></div>
+        </div>
+
+        <div id="step3" style="margin-top:2em;">
+            <h2>STEP 3: Parse Contacts</h2>
+            <button id="parse-btn">Parse Step 2 Results</button>
+            <button type="button" id="clear-step3">Clear Step 3</button>
+            <button type="button" id="copy-step3-results">Copy Results</button>
+            <div id="contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
+        </div>
+    </section>
+
+    <section id="guess-method" class="method-section" aria-hidden="true">
+        <h2>Guess Method</h2>
+        <p>This method is coming soon. Stay tuned for updates!</p>
+    </section>
 </div>
 
-<div id="step3" style="margin-top:2em;">
-    <h2>STEP 3: Parse Contacts</h2>
-    <button id="parse-btn">Parse Step 2 Results</button>
-    <button type="button" id="clear-step3">Clear Step 3</button>
-    <button type="button" id="copy-step3-results">Copy Results</button>
-    <div id="contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
-</div>
+<script>
+    document.querySelectorAll('.method-tab').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (button.classList.contains('active')) {
+                return;
+            }
+            document.querySelectorAll('.method-tab').forEach(function (btn) {
+                btn.classList.toggle('active', btn === button);
+            });
+            document.querySelectorAll('.method-section').forEach(function (section) {
+                var isActive = section.id === button.dataset.target;
+                section.classList.toggle('active', isActive);
+                section.setAttribute('aria-hidden', (!isActive).toString());
+            });
+        });
+    });
+</script>
 
-<script src="{{ url_for('static', filename='generate_contacts/step1.js') }}"></script>
-<script src="{{ url_for('static', filename='generate_contacts/step2.js') }}"></script>
-<script src="{{ url_for('static', filename='generate_contacts/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/simple_method/step1.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/simple_method/step2.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/simple_method/step3.js') }}"></script>
 </body>
 </html>

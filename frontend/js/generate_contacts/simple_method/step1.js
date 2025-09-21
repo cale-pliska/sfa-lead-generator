@@ -1,14 +1,36 @@
 const STORAGE_KEYS = {
+  tsv: "generate_contacts_simple_step1_tsv",
+  instructions: "generate_contacts_simple_step1_instructions",
+  prompt: "generate_contacts_simple_step1_prompt",
+};
+
+const LEGACY_STORAGE_KEYS = {
   tsv: "generate_contacts_step1_tsv",
   instructions: "generate_contacts_step1_instructions",
   prompt: "generate_contacts_step1_prompt",
 };
 
+function loadValueWithFallback(key) {
+  var current = localStorage.getItem(STORAGE_KEYS[key]) || "";
+  if (current && current.length) {
+    return current;
+  }
+  var legacyKey = LEGACY_STORAGE_KEYS[key];
+  if (!legacyKey) {
+    return "";
+  }
+  var legacyValue = localStorage.getItem(legacyKey) || "";
+  if (legacyValue && legacyValue.length) {
+    localStorage.setItem(STORAGE_KEYS[key], legacyValue);
+    return legacyValue;
+  }
+  return "";
+}
+
 function loadSavedSetup() {
-  const savedTsv = localStorage.getItem(STORAGE_KEYS.tsv) || "";
-  const savedInstructions =
-    localStorage.getItem(STORAGE_KEYS.instructions) || "";
-  const savedPrompt = localStorage.getItem(STORAGE_KEYS.prompt) || "";
+  const savedTsv = loadValueWithFallback('tsv');
+  const savedInstructions = loadValueWithFallback('instructions');
+  const savedPrompt = loadValueWithFallback('prompt');
 
   return { savedTsv, savedInstructions, savedPrompt };
 }
@@ -31,7 +53,7 @@ function autoPopulateFromSaved() {
     const formData = new FormData();
     formData.append("tsv_text", tsvData);
     $.ajax({
-      url: "/upload",
+      url: "/generate_contacts/simple/upload",
       method: "POST",
       data: formData,
       processData: false,
@@ -50,6 +72,9 @@ function autoSave() {
   localStorage.setItem(STORAGE_KEYS.tsv, $("#tsv-input").val());
   localStorage.setItem(STORAGE_KEYS.instructions, $("#instructions").val());
   localStorage.setItem(STORAGE_KEYS.prompt, $("#prompt").val());
+  Object.values(LEGACY_STORAGE_KEYS).forEach(function (legacyKey) {
+    localStorage.removeItem(legacyKey);
+  });
 }
 
 $(document).ready(function () {
@@ -62,7 +87,7 @@ $("#upload-form").on("submit", function (e) {
   e.preventDefault();
   var formData = new FormData(this);
   $.ajax({
-    url: "/upload",
+    url: "/generate_contacts/simple/upload",
     method: "POST",
     data: formData,
     processData: false,
