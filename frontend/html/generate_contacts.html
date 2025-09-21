@@ -50,6 +50,40 @@
         .guess-step-config h3 {
             margin: 0.5em 0;
         }
+        .guess-process-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25em;
+            min-width: 220px;
+        }
+        .guess-process-slider input[type="range"] {
+            width: 100%;
+        }
+        .guess-process-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            gap: 0.5em;
+        }
+        .guess-process-labels span {
+            flex: 1;
+            text-align: center;
+            padding: 0.3em 0.4em;
+            border-radius: 0.4em;
+            background-color: #f1f3f4;
+            color: #1a73e8;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .guess-process-labels span.active {
+            background-color: #1a73e8;
+            color: #fff;
+            font-weight: bold;
+        }
+        .guess-shared-prompt {
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
@@ -130,23 +164,28 @@
             <div id="guess-process-section">
                 <div class="guess-process-mode">
                     <strong>Process:</strong>
-                    <label><input type="radio" name="guess-process-mode" value="both" checked> Steps 2 &amp; 3</label>
-                    <label><input type="radio" name="guess-process-mode" value="step2"> Step 2 only</label>
-                    <label><input type="radio" name="guess-process-mode" value="step3"> Step 3 only</label>
+                    <div class="guess-process-slider">
+                        <input type="range" id="guess-process-slider" min="0" max="2" step="1" value="1">
+                        <div class="guess-process-labels">
+                            <span data-value="step2">Process Step 2</span>
+                            <span data-value="both" class="active">Process Both</span>
+                            <span data-value="step3">Process Step 3</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="guess-step-config">
                     <h3>Step 2 Instructions</h3>
                     <label>Instructions:</label><br>
                     <textarea id="guess-instructions" style="height:80px;"></textarea><br>
+                </div>
+                <div class="guess-shared-prompt">
                     <label>Prompt (use column names in {braces}):</label><br>
-                    <textarea id="guess-prompt" style="height:100px;"></textarea><br>
+                    <textarea id="guess-shared-prompt" style="height:100px;"></textarea><br>
                 </div>
                 <div class="guess-step-config">
                     <h3>Step 3 Instructions</h3>
                     <label>Instructions:</label><br>
                     <textarea id="guess-step3-instructions" style="height:80px;"></textarea><br>
-                    <label>Prompt (use column names in {braces}):</label><br>
-                    <textarea id="guess-step3-prompt" style="height:100px;"></textarea><br>
                 </div>
                 <label>Row index for single run:</label>
                 <input type="number" id="guess-row-index" value="0" min="0"><br>
@@ -157,10 +196,8 @@
                 <button id="guess-process-single-btn">Process Single Row</button>
                 <button id="guess-process-range-btn">Process Range</button>
                 <button type="button" id="guess-extract-domain-btn">Extract Domains</button>
-                <button type="button" id="guess-step3-clear">Clear Contact Results</button>
-                <button type="button" id="guess-step3-copy-results">Copy Results</button>
                 <button type="button" id="guess-cancel-step2">Cancel Processing</button>
-                <button type="button" id="guess-clear-step2">Clear All Results</button>
+                <button type="button" id="guess-clear-step2">Clear Results</button>
             </div>
             <div id="guess-results-container" class="scrollable-output" style="margin-top:1em;"></div>
         </div>

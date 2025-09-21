@@ -69,7 +69,7 @@
 
     $("#guess-tsv-input").val(tsvData);
     $("#guess-instructions").val(setup.savedInstructions);
-    $("#guess-prompt").val(setup.savedPrompt);
+    $("#guess-shared-prompt").val(setup.savedPrompt);
 
     if (tsvData) {
       const formData = new FormData();
@@ -96,7 +96,10 @@
       STORAGE_KEYS.instructions,
       $("#guess-instructions").val()
     );
-    localStorage.setItem(STORAGE_KEYS.prompt, $("#guess-prompt").val());
+    localStorage.setItem(
+      STORAGE_KEYS.prompt,
+      $("#guess-shared-prompt").val()
+    );
     Object.values(LEGACY_STORAGE_KEYS).forEach(function (legacyKey) {
       localStorage.removeItem(legacyKey);
     });
@@ -104,7 +107,7 @@
 
   $(document).ready(function () {
     autoPopulateFromSaved();
-    $("#guess-tsv-input, #guess-instructions, #guess-prompt").on(
+    $("#guess-tsv-input, #guess-instructions, #guess-shared-prompt").on(
       "input",
       autoSave
     );
