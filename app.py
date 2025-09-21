@@ -8,6 +8,9 @@ from backend.generate_contacts import (
     simple_step1_bp as gc_simple_step1_bp,
     simple_step2_bp as gc_simple_step2_bp,
     simple_step3_bp as gc_simple_step3_bp,
+    guess_step1_bp as gc_guess_step1_bp,
+    guess_step2_bp as gc_guess_step2_bp,
+    guess_step3_bp as gc_guess_step3_bp,
 )
 from backend.prioritize_businesses import (
     step1_bp as prioritize_step1_bp,
@@ -48,6 +51,9 @@ def create_app():
     app.register_blueprint(gc_simple_step1_bp)
     app.register_blueprint(gc_simple_step2_bp)
     app.register_blueprint(gc_simple_step3_bp)
+    app.register_blueprint(gc_guess_step1_bp)
+    app.register_blueprint(gc_guess_step2_bp)
+    app.register_blueprint(gc_guess_step3_bp)
 
     return app
 
