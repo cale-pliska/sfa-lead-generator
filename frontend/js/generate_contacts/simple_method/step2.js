@@ -1,7 +1,13 @@
 const RESULTS_KEY = "generate_contacts_simple_step2_results";
 const LEGACY_RESULTS_KEY = "generate_contacts_step2_results";
 const LEGACY_PROMPT_KEY = "generate_contacts_step2_prompt";
-var step2Results = {};
+
+function replaceStep2Results(nextResults) {
+  window.step2Results = nextResults || {};
+  return window.step2Results;
+}
+
+var step2Results = replaceStep2Results(window.step2Results || {});
 var cancelProcessing = false;
 var currentRequest = null;
 
@@ -195,7 +201,7 @@ Example output:
   var saved = localStorage.getItem(RESULTS_KEY) || localStorage.getItem(LEGACY_RESULTS_KEY);
   if (saved) {
     try {
-      step2Results = JSON.parse(saved);
+      step2Results = replaceStep2Results(JSON.parse(saved));
       renderResultsTable(step2Results);
     } catch (e) {
       console.error(e);
@@ -203,7 +209,7 @@ Example output:
   }
 
   $("#clear-step2").on("click", function () {
-    step2Results = {};
+    step2Results = replaceStep2Results({});
     $("#results-container").empty();
     localStorage.removeItem(RESULTS_KEY);
     localStorage.removeItem(LEGACY_RESULTS_KEY);

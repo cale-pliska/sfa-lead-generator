@@ -1,5 +1,26 @@
 var parsedContacts = [];
 var LEGACY_CONTACTS_KEY = "saved_contacts";
+var STEP2_RESULTS_KEY = "generate_contacts_simple_step2_results";
+var LEGACY_STEP2_RESULTS_KEY = "generate_contacts_step2_results";
+
+function ensureStep2Results() {
+  if (window.step2Results && typeof window.step2Results === "object") {
+    return window.step2Results;
+  }
+  var saved =
+    localStorage.getItem(STEP2_RESULTS_KEY) ||
+    localStorage.getItem(LEGACY_STEP2_RESULTS_KEY);
+  if (saved) {
+    try {
+      window.step2Results = JSON.parse(saved);
+      return window.step2Results;
+    } catch (e) {
+      console.error("Unable to parse Step 2 results", e);
+    }
+  }
+  window.step2Results = {};
+  return window.step2Results;
+}
 
 function copyTableToClipboard(selector) {
   var table = $(selector);
@@ -75,7 +96,8 @@ function renderContactsTable(data) {
 }
 
 $("#parse-btn").on("click", function () {
-  if (Object.keys(step2Results).length === 0) {
+  var currentStep2Results = ensureStep2Results();
+  if (Object.keys(currentStep2Results).length === 0) {
     alert("No Step 2 results to parse");
     return;
   }
@@ -83,7 +105,7 @@ $("#parse-btn").on("click", function () {
     url: "/generate_contacts/simple/parse_contacts",
     method: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ results: Object.values(step2Results) }),
+    data: JSON.stringify({ results: Object.values(currentStep2Results) }),
     success: function (data) {
       parsedContacts = parsedContacts.concat(data);
       renderContactsTable(parsedContacts);
