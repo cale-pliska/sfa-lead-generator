@@ -1,4 +1,26 @@
 var parsedContacts = [];
+var LEGACY_CONTACTS_KEY = "saved_contacts";
+var STEP2_RESULTS_KEY = "generate_contacts_simple_step2_results";
+var LEGACY_STEP2_RESULTS_KEY = "generate_contacts_step2_results";
+
+function ensureStep2Results() {
+  if (window.step2Results && typeof window.step2Results === "object") {
+    return window.step2Results;
+  }
+  var saved =
+    localStorage.getItem(STEP2_RESULTS_KEY) ||
+    localStorage.getItem(LEGACY_STEP2_RESULTS_KEY);
+  if (saved) {
+    try {
+      window.step2Results = JSON.parse(saved);
+      return window.step2Results;
+    } catch (e) {
+      console.error("Unable to parse Step 2 results", e);
+    }
+  }
+  window.step2Results = {};
+  return window.step2Results;
+}
 
 function copyTableToClipboard(selector) {
   var table = $(selector);
@@ -33,7 +55,9 @@ function fallbackCopy(text) {
 }
 
 $(document).ready(function () {
-  var saved = localStorage.getItem("saved_contacts");
+  var saved =
+    localStorage.getItem("generate_contacts_simple_saved_contacts") ||
+    localStorage.getItem(LEGACY_CONTACTS_KEY);
   if (saved) {
     try {
       parsedContacts = JSON.parse(saved);
@@ -72,19 +96,21 @@ function renderContactsTable(data) {
 }
 
 $("#parse-btn").on("click", function () {
-  if (Object.keys(step2Results).length === 0) {
+  var currentStep2Results = ensureStep2Results();
+  if (Object.keys(currentStep2Results).length === 0) {
     alert("No Step 2 results to parse");
     return;
   }
   $.ajax({
-    url: "/parse_contacts",
+    url: "/generate_contacts/simple/parse_contacts",
     method: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ results: Object.values(step2Results) }),
+    data: JSON.stringify({ results: Object.values(currentStep2Results) }),
     success: function (data) {
       parsedContacts = parsedContacts.concat(data);
       renderContactsTable(parsedContacts);
-      localStorage.setItem("saved_contacts", JSON.stringify(parsedContacts));
+      localStorage.setItem("generate_contacts_simple_saved_contacts", JSON.stringify(parsedContacts));
+      localStorage.removeItem(LEGACY_CONTACTS_KEY);
     },
     error: function (xhr) {
       alert(xhr.responseText);
@@ -95,7 +121,8 @@ $("#parse-btn").on("click", function () {
 $("#clear-step3").on("click", function () {
   $("#contacts-container").empty();
   parsedContacts = [];
-  localStorage.removeItem("saved_contacts");
+  localStorage.removeItem("generate_contacts_simple_saved_contacts");
+  localStorage.removeItem(LEGACY_CONTACTS_KEY);
 });
 
 $("#copy-step3-results").on("click", function () {

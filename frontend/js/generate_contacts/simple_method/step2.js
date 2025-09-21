@@ -1,5 +1,13 @@
-const RESULTS_KEY = "generate_contacts_step2_results";
-var step2Results = {};
+const RESULTS_KEY = "generate_contacts_simple_step2_results";
+const LEGACY_RESULTS_KEY = "generate_contacts_step2_results";
+const LEGACY_PROMPT_KEY = "generate_contacts_step2_prompt";
+
+function replaceStep2Results(nextResults) {
+  window.step2Results = nextResults || {};
+  return window.step2Results;
+}
+
+var step2Results = replaceStep2Results(window.step2Results || {});
 var cancelProcessing = false;
 var currentRequest = null;
 
@@ -68,7 +76,7 @@ $("#process-range-btn").on("click", function () {
     var idx = indexes[pos];
     function send(attempt) {
       currentRequest = $.ajax({
-        url: "/generate_contacts/process_single",
+        url: "/generate_contacts/simple/process_single",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify({
@@ -81,6 +89,7 @@ $("#process-range-btn").on("click", function () {
           step2Results[idx] = data;
           renderResultsTable(step2Results);
           localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+          localStorage.removeItem(LEGACY_RESULTS_KEY);
           if (!cancelProcessing) {
             setTimeout(function () {
               processNext(pos + 1);
@@ -113,7 +122,7 @@ $("#process-single-btn").on("click", function () {
   var instructions = $("#instructions").val();
   var rowIndex = parseInt($("#row-index").val()) || 0;
   $.ajax({
-    url: "/generate_contacts/process_single",
+    url: "/generate_contacts/simple/process_single",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({
@@ -126,6 +135,7 @@ $("#process-single-btn").on("click", function () {
       step2Results[rowIndex] = data;
       renderResultsTable(step2Results);
       localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+      localStorage.removeItem(LEGACY_RESULTS_KEY);
     },
     error: function (xhr) {
       console.error("Error processing row", rowIndex, xhr.responseText);
@@ -174,20 +184,24 @@ Example output:
 ]`;
   $("#instructions").val(defaultInstructions);
   var defaultPrompt = "{business_name} {website}";
-  var savedPrompt = localStorage.getItem("generate_contacts_step2_prompt");
+  var savedPrompt =
+    localStorage.getItem("generate_contacts_simple_step2_prompt") ||
+    localStorage.getItem(LEGACY_PROMPT_KEY);
   if (savedPrompt && savedPrompt.trim() !== "") {
     $("#prompt").val(savedPrompt);
   } else {
     $("#prompt").val(defaultPrompt);
   }
   $("#prompt").on("input", function () {
-    localStorage.setItem("generate_contacts_step2_prompt", $(this).val());
+    var value = $(this).val();
+    localStorage.setItem("generate_contacts_simple_step2_prompt", value);
+    localStorage.removeItem(LEGACY_PROMPT_KEY);
   });
 
-  var saved = localStorage.getItem(RESULTS_KEY);
+  var saved = localStorage.getItem(RESULTS_KEY) || localStorage.getItem(LEGACY_RESULTS_KEY);
   if (saved) {
     try {
-      step2Results = JSON.parse(saved);
+      step2Results = replaceStep2Results(JSON.parse(saved));
       renderResultsTable(step2Results);
     } catch (e) {
       console.error(e);
@@ -195,14 +209,18 @@ Example output:
   }
 
   $("#clear-step2").on("click", function () {
-    step2Results = {};
+    step2Results = replaceStep2Results({});
     $("#results-container").empty();
     localStorage.removeItem(RESULTS_KEY);
+    localStorage.removeItem(LEGACY_RESULTS_KEY);
   });
 });
 
 $(window).on("beforeunload", function () {
-  localStorage.setItem("generate_contacts_step2_prompt", $("#prompt").val());
+  var promptValue = $("#prompt").val();
+  localStorage.setItem("generate_contacts_simple_step2_prompt", promptValue);
+  localStorage.removeItem(LEGACY_PROMPT_KEY);
   localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+  localStorage.removeItem(LEGACY_RESULTS_KEY);
 });
 

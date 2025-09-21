@@ -2,7 +2,9 @@ import pandas as pd
 
 import json
 import re
-from ..utilities.openai_helpers import call_openai
+from typing import Any
+
+from ...utilities.openai_helpers import call_openai
 
 
 def _format_prompt(prompt: str, row: pd.Series) -> str:
@@ -27,8 +29,9 @@ def _strip_json_codeblock(text: str) -> str:
     return text
 
 
-def parse_contacts(raw_result: str):
-    """Return a list of contact dicts parsed from the raw OpenAI result."""
+def _load_json(raw_result: str) -> Any:
+    """Best effort JSON loader that tolerates fenced code blocks."""
+
     try:
         return json.loads(raw_result)
     except json.JSONDecodeError:
@@ -36,13 +39,58 @@ def parse_contacts(raw_result: str):
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError:
-            return []
+            return None
 
 
-def _normalize_contact(contact: dict) -> dict:
+def parse_contacts(raw_result: str):
+    """Return the parsed contacts as a list, handling common variations."""
+
+    parsed = _load_json(raw_result)
+    if parsed is None:
+        return []
+
+    if isinstance(parsed, list):
+        return parsed
+
+    if isinstance(parsed, dict):
+        contacts = parsed.get("contacts")
+        if isinstance(contacts, list):
+            return contacts
+        return [parsed]
+
+    return [parsed]
+
+
+def _coerce_contact_to_dict(contact: Any) -> dict:
+    """Convert loose contact data into a dictionary shape."""
+
+    if isinstance(contact, dict):
+        return contact
+
+    if isinstance(contact, list):
+        if all(isinstance(item, dict) for item in contact):
+            merged: dict[str, Any] = {}
+            for item in contact:
+                merged.update(item)
+            if merged:
+                return merged
+        if all(
+            isinstance(item, (list, tuple)) and len(item) == 2 for item in contact
+        ):
+            return {str(key): value for key, value in contact}
+        return {"raw_contact": json.dumps(contact, ensure_ascii=False)}
+
+    if isinstance(contact, (str, int, float, bool)) or contact is None:
+        return {"raw_contact": contact}
+
+    return {"raw_contact": json.dumps(contact, ensure_ascii=False)}
+
+
+def _normalize_contact(contact: Any) -> dict:
     """Return a new contact dict with common fields normalized."""
     normalized = {}
-    for key, value in contact.items():
+    contact_dict = _coerce_contact_to_dict(contact)
+    for key, value in contact_dict.items():
         lower = key.lower().strip().replace(" ", "_")
         if "email" in lower:
             # Collapse any key containing the word "email" to just "email"

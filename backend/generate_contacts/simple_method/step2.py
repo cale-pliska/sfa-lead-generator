@@ -1,39 +1,45 @@
-from flask import Blueprint, jsonify, request
+"""Processing endpoints for the simple contact generation method."""
+
 import pandas as pd
+from flask import Blueprint, jsonify, request
 
 from . import data_store
 from .processing import apply_prompt_to_dataframe, apply_prompt_to_row
 
-# Blueprint for Step 2 of Generate Contacts
-step2_bp = Blueprint("generate_contacts_step2", __name__)
+simple_step2_bp = Blueprint(
+    "generate_contacts_simple_step2",
+    __name__,
+    url_prefix="/generate_contacts/simple",
+)
 
 
-@step2_bp.route("/generate_contacts/process", methods=["POST"])
+@simple_step2_bp.route("/process", methods=["POST"])
 def process():
-    """Apply the prompt to the entire DataFrame."""
+    """Apply the prompt to every row in the stored dataframe."""
+    if data_store.DATAFRAME is None:
+        return "No data loaded", 400
+
     prompt = request.json.get("prompt", "")
     instructions = request.json.get("instructions", "")
     results = apply_prompt_to_dataframe(data_store.DATAFRAME, instructions, prompt)
     return jsonify(results)
 
 
-@step2_bp.route("/generate_contacts/process_single", methods=["POST"])
+@simple_step2_bp.route("/process_single", methods=["POST"])
 def process_single():
-    """Process a single row of data."""
+    """Process a single row of data using the configured prompt."""
+    if data_store.DATAFRAME is None:
+        return "No data loaded", 400
+
     prompt = request.json.get("prompt", "")
     instructions = request.json.get("instructions", "")
     row_index = int(request.json.get("row_index", 0))
 
-    if (
-        data_store.DATAFRAME is None
-        or row_index < 0
-        or row_index >= len(data_store.DATAFRAME)
-    ):
+    if row_index < 0 or row_index >= len(data_store.DATAFRAME):
         return "Invalid row index", 400
 
     row = data_store.DATAFRAME.iloc[row_index]
     result = apply_prompt_to_row(row, instructions, prompt)
-    # Replace NaN values with None to ensure valid JSON
     new_row = row.where(pd.notna(row), None).to_dict()
     new_row["result"] = result
     return jsonify(new_row)

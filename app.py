@@ -4,9 +4,10 @@ from dotenv import load_dotenv
 import openai
 
 from backend.generate_contacts import (
-    step1_bp as gc_step1_bp,
-    step2_bp as gc_step2_bp,
-    step3_bp as gc_step3_bp,
+    pages_bp as gc_pages_bp,
+    simple_step1_bp as gc_simple_step1_bp,
+    simple_step2_bp as gc_simple_step2_bp,
+    simple_step3_bp as gc_simple_step3_bp,
 )
 from backend.prioritize_businesses import (
     step1_bp as prioritize_step1_bp,
@@ -33,7 +34,7 @@ def create_app():
     app = Flask(__name__, static_folder="frontend/js", template_folder="frontend/html")
 
     # Register blueprints for each step of the UI
-    app.register_blueprint(gc_step1_bp)
+    app.register_blueprint(gc_pages_bp)
     app.register_blueprint(parse_step1_bp)
     app.register_blueprint(parse_step2_bp)
     app.register_blueprint(parse_step3_bp)
@@ -44,8 +45,9 @@ def create_app():
     app.register_blueprint(prioritize_step1_bp)
     app.register_blueprint(prioritize_step2_bp)
     app.register_blueprint(prioritize_step3_bp)
-    app.register_blueprint(gc_step2_bp)
-    app.register_blueprint(gc_step3_bp)
+    app.register_blueprint(gc_simple_step1_bp)
+    app.register_blueprint(gc_simple_step2_bp)
+    app.register_blueprint(gc_simple_step3_bp)
 
     return app
 
