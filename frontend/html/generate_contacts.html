@@ -110,7 +110,7 @@
         </div>
 
         <div id="guess-step2" style="margin-top:2em;">
-            <h2>STEP 2: Generate Contacts</h2>
+            <h2>STEP 2: Find Public Emails</h2>
             <div id="guess-process-section">
                 <label>Instructions:</label><br>
                 <textarea id="guess-instructions" style="height:80px;"></textarea><br>
@@ -124,6 +124,7 @@
                 <input type="number" id="guess-end-index" value="0" min="0"><br>
                 <button id="guess-process-single-btn">Process Single Row</button>
                 <button id="guess-process-range-btn">Process Range</button>
+                <button type="button" id="guess-extract-domain-btn">Extract Domains</button>
                 <button type="button" id="guess-cancel-step2">Cancel Processing</button>
                 <button type="button" id="guess-clear-step2">Clear Results</button>
 
@@ -132,11 +133,25 @@
         </div>
 
         <div id="guess-step3" style="margin-top:2em;">
-            <h2>STEP 3: Parse Contacts</h2>
-            <button id="guess-parse-btn">Parse Step 2 Results</button>
-            <button type="button" id="guess-clear-step3">Clear Step 3</button>
-            <button type="button" id="guess-copy-step3-results">Copy Results</button>
-            <div id="guess-contacts-container" class="scrollable-output" style="margin-top:1em;"></div>
+            <h2>STEP 3: Find Target Contacts</h2>
+            <div id="guess-step3-process-section">
+                <label>Instructions:</label><br>
+                <textarea id="guess-step3-instructions" style="height:80px;"></textarea><br>
+                <label>Prompt (use column names in {braces}):</label><br>
+                  <textarea id="guess-step3-prompt" style="height:100px;"></textarea><br>
+                <label>Row index for single run:</label>
+                <input type="number" id="guess-step3-row-index" value="0" min="0"><br>
+                <label>Start index:</label>
+                <input type="number" id="guess-step3-start-index" value="0" min="0">
+                <label>End index:</label>
+                <input type="number" id="guess-step3-end-index" value="0" min="0"><br>
+                <button id="guess-step3-process-single-btn">Process Single Row</button>
+                <button id="guess-step3-process-range-btn">Process Range</button>
+                <button type="button" id="guess-step3-cancel">Cancel Processing</button>
+                <button type="button" id="guess-step3-clear">Clear Results</button>
+                <button type="button" id="guess-step3-copy-results">Copy Results</button>
+            </div>
+            <div id="guess-step3-results-container" class="scrollable-output" style="margin-top:1em;"></div>
         </div>
     </section>
 </div>

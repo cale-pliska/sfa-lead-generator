@@ -26,6 +26,52 @@
     return Object.keys(obj)[0];
   }
 
+  function formatValue(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    if (typeof value === "string") {
+      return value;
+    }
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+
+  function extractDomainsFromValue(value) {
+    if (!value) {
+      return "";
+    }
+    let text;
+    if (typeof value === "string") {
+      text = value;
+    } else {
+      try {
+        text = JSON.stringify(value);
+      } catch (err) {
+        text = String(value);
+      }
+    }
+    const matches = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi);
+    if (!matches) {
+      return "";
+    }
+    const domains = [];
+    matches.forEach(function (email) {
+      const cleaned = email.trim().replace(/[.,;:]+$/, "");
+      const parts = cleaned.split("@");
+      if (parts.length === 2) {
+        const domain = parts[1].toLowerCase();
+        if (domain && domains.indexOf(domain) === -1) {
+          domains.push(domain);
+        }
+      }
+    });
+    return domains.join(", ");
+  }
+
   function renderResultsTable(resultsObj) {
     const indexes = Object.keys(resultsObj).sort(function (a, b) {
       return parseInt(a, 10) - parseInt(b, 10);
@@ -34,22 +80,38 @@
       $("#guess-results-container").html("No results");
       return;
     }
-    const firstRow = resultsObj[indexes[0]];
+    const firstRow = resultsObj[indexes[0]] || {};
     const businessKey = getBusinessNameKey(firstRow);
-    let html =
-      "<table><thead><tr><th>index</th><th>" +
-      businessKey +
-      "</th><th>result</th></tr></thead><tbody>";
+    const columns = [];
+    if (businessKey) {
+      columns.push(businessKey);
+    }
+    if (columns.indexOf("raw_public_emails") === -1) {
+      columns.push("raw_public_emails");
+    }
+    if (columns.indexOf("email_domain") === -1) {
+      columns.push("email_domain");
+    }
+    const hasRawContacts = indexes.some(function (idx) {
+      const row = resultsObj[idx];
+      return row && row.raw_contacts !== undefined;
+    });
+    if (hasRawContacts && columns.indexOf("raw_contacts") === -1) {
+      columns.push("raw_contacts");
+    }
+    let html = "<table><thead><tr><th>index</th>";
+    columns.forEach(function (col) {
+      html += "<th>" + col + "</th>";
+    });
+    html += "</tr></thead><tbody>";
     indexes.forEach(function (idx) {
       const row = resultsObj[idx];
-      html +=
-        "<tr><td>" +
-        idx +
-        "</td><td>" +
-        (row[businessKey] || "") +
-        "</td><td>" +
-        row.result +
-        "</td></tr>";
+      html += "<tr><td>" + idx + "</td>";
+      columns.forEach(function (col) {
+        const value = row ? row[col] : "";
+        html += "<td>" + formatValue(value) + "</td>";
+      });
+      html += "</tr>";
     });
     html += "</tbody></table>";
     $("#guess-results-container").html(html);
@@ -57,6 +119,7 @@
 
   function storeResults() {
     localStorage.setItem(RESULTS_KEY, JSON.stringify(step2Results));
+    $(document).trigger("guessStep2ResultsUpdated");
   }
 
   function runSingleRequest(payload, onSuccess, onError) {
@@ -157,40 +220,36 @@
     }
   });
 
+  $("#guess-extract-domain-btn").on("click", function () {
+    const indexes = Object.keys(step2Results);
+    if (!indexes.length) {
+      alert("No Step 2 results to process");
+      return;
+    }
+    indexes.forEach(function (idx) {
+      const row = step2Results[idx];
+      if (!row) {
+        return;
+      }
+      row.email_domain = extractDomainsFromValue(row.raw_public_emails);
+    });
+    renderResultsTable(step2Results);
+    storeResults();
+  });
+
   $(document).ready(function () {
-    const defaultInstructions = `You are a contact generation expert for sales.
+    const defaultInstructions = `You are a research assistant tasked with locating public-facing email inboxes for a company.
 
-For the business provided, find all key contacts. Prioritize:
-– Founders
-– COOs
-– Heads of Operations
-– Other senior decision-makers
+Given the business name, location, and website, find three publicly listed email addresses that a prospect could use to reach the company. Prioritize shared inboxes such as info@, contact@, support@, hello@, or similar addresses that appear on the website or reputable directories.
 
-Required output format:
-Return results as a JSON array of objects.
-Each object must contain:
-- firstname
-- lastname
-- role
-- email (if you can't find their email directly guess it)
+Return exactly three email strings in a JSON array. If fewer than three unique emails are available, repeat the best available emails so the array still contains three entries.
 
-⚠️ Do not include company name, emails, or any extra explanation.
-⚠️ Output only the raw JSON.
+Output format example:
+["info@example.com", "support@example.com", "contact@example.com"]
 
-Example input:
-ABC Company
-
-Example output:
-[
-  { "firstname": "John", "lastname": "Smith", "role": "Founder", "email": "john.smith@abccompany.com" },
-  { "firstname": "Jane", "lastname": "Doe", "role": "COO", "email": "jane.doe@abccompany.com" },
-  { "firstname": "Michael", "lastname": "Johnson", "role": "Head of Operations", "email": "michael.johnson@abccompany.com" },
-  { "firstname": "Ryan", "lastname": "Patel", "role": "Founder", "email": "ryan.patel@abccompany.com" },
-  { "firstname": "Laura", "lastname": "Nguyen", "role": "VP of Operations", "email": "laura.nguyen@abccompany.com" },
-  { "firstname": "Carlos", "lastname": "Rivera", "role": "COO", "email": "carlos.rivera@abccompany.com" }
-]`;
+Respond with only the JSON array.`;
     $("#guess-instructions").val(defaultInstructions);
-    const defaultPrompt = "{business_name} {website}";
+    const defaultPrompt = "{business_name} {location} {website}";
     const savedPrompt = localStorage.getItem(PROMPT_KEY);
     if (savedPrompt && savedPrompt.trim() !== "") {
       $("#guess-prompt").val(savedPrompt);
@@ -207,15 +266,21 @@ Example output:
       try {
         step2Results = replaceStep2Results(JSON.parse(saved));
         renderResultsTable(step2Results);
+        $(document).trigger("guessStep2ResultsUpdated");
       } catch (e) {
         console.error(e);
       }
     }
 
+    $(document).on("guessStep2ResultsUpdated", function () {
+      renderResultsTable(step2Results);
+    });
+
     $("#guess-clear-step2").on("click", function () {
       step2Results = replaceStep2Results({});
       $("#guess-results-container").empty();
       localStorage.removeItem(RESULTS_KEY);
+      $(document).trigger("guessStep2ResultsUpdated");
     });
   });
 

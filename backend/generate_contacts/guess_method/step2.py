@@ -21,8 +21,18 @@ def process():
 
     prompt = request.json.get("prompt", "")
     instructions = request.json.get("instructions", "")
-    results = apply_prompt_to_dataframe(data_store.DATAFRAME, instructions, prompt)
-    return jsonify(results)
+    raw_results = apply_prompt_to_dataframe(
+        data_store.DATAFRAME, instructions, prompt
+    )
+    transformed = []
+    for row in raw_results:
+        if isinstance(row, dict):
+            updated_row = {k: v for k, v in row.items() if k != "result"}
+            updated_row["raw_public_emails"] = row.get("result", "")
+        else:
+            updated_row = {"raw_public_emails": row}
+        transformed.append(updated_row)
+    return jsonify(transformed)
 
 
 @guess_step2_bp.route("/process_single", methods=["POST"])
@@ -41,5 +51,5 @@ def process_single():
     row = data_store.DATAFRAME.iloc[row_index]
     result = apply_prompt_to_row(row, instructions, prompt)
     new_row = row.where(pd.notna(row), None).to_dict()
-    new_row["result"] = result
+    new_row["raw_public_emails"] = result
     return jsonify(new_row)
