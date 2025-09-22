@@ -16,6 +16,31 @@
   let selectedColumns = [];
   let columnLabels = {};
 
+  function ensureEmailColumnsSelected() {
+    const requiredColumns = ["email", "email_pattern"];
+    const storedSelection = Storage.loadSelectedColumns();
+    let baseSelection = [];
+    if (Array.isArray(storedSelection) && storedSelection.length) {
+      baseSelection = storedSelection.slice();
+    } else if (Array.isArray(selectedColumns) && selectedColumns.length) {
+      baseSelection = selectedColumns.slice();
+    }
+    const seen = new Set(baseSelection);
+    let changed = false;
+
+    requiredColumns.forEach(function (column) {
+      if (!seen.has(column)) {
+        baseSelection.push(column);
+        seen.add(column);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      Storage.storeSelectedColumns(baseSelection);
+    }
+  }
+
   function updateAvailableColumns(rows) {
     const columns = Columns.collectColumns(rows);
     availableColumns = columns;
@@ -100,12 +125,19 @@
     const result = Emails.generateEmailRows(parsedContacts);
 
     if (!result.baseRows.length) {
+      if (result.existingGenerated.length) {
+        ensureEmailColumnsSelected();
+        alert("Email variations are already populated for the available contacts.");
+        refreshContactsDisplay();
+        return;
+      }
       alert("No base contacts are available. Please create contacts first.");
       return;
     }
 
     if (!result.generatedCount) {
       if (result.existingGenerated.length) {
+        ensureEmailColumnsSelected();
         alert("Email variations are already populated for the available contacts.");
         refreshContactsDisplay();
         return;
@@ -121,6 +153,7 @@
 
     parsedContacts = result.updatedRows;
     Storage.storeContacts(parsedContacts);
+    ensureEmailColumnsSelected();
     refreshContactsDisplay();
   }
 

@@ -74,7 +74,6 @@
     let generatedCount = 0;
 
     baseRows.forEach(function (row) {
-      updatedRows.push(row);
       const variations = buildEmailVariationsForRow(row);
       variations.forEach(function (variation) {
         const emailRow = Contacts.ensureCanonicalFields(Shared.cloneRow(row));
