@@ -283,7 +283,9 @@
         <div id="guess-step4" style="margin-top:2em;">
             <h2>STEP 4: Parse Contacts</h2>
             <button id="guess-create-contacts-btn">Create Contacts</button>
+            <button type="button" id="guess-populate-emails-btn">Populate Emails</button>
             <button type="button" id="guess-copy-step4-results">Copy Results</button>
+            <button type="button" id="guess-clear-step4-btn">Clear Contents</button>
             <div id="guess-step4-column-controls">
                 <strong>Columns:</strong>
                 <div id="guess-step4-column-toggle"></div>
@@ -317,6 +319,13 @@
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step1.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step2.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/constants.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/shared.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/contacts.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/columns.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/emails.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/storage.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4/ui.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step4.js') }}"></script>
 </body>
 </html>
