@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Validate Emails</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 4px; }
+        textarea { width: 100%; height: 150px; }
+        .scrollable-output {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #validation-summary {
+            margin-top: 1em;
+            padding: 0.75em 1em;
+            background-color: #f8f9fa;
+            border: 1px solid #dfe1e5;
+            border-radius: 0.5em;
+        }
+        #validation-summary h3 {
+            margin-top: 0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<h1>Validate Emails</h1>
+ <nav>
+     <a href="{{ url_for('step1.index') }}">Home</a> |
+     <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
+     <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
+     <a href="{{ url_for('prioritize_businesses.prioritize_businesses') }}">Prioritize Businesses</a> |
+     <a href="{{ url_for('validate_emails.page') }}">Validate Emails</a> |
+     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+ </nav>
+
+<div id="step1">
+    <h2>STEP 1: Initial Data Load</h2>
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+        <label for="tsv-input">Paste TSV Data:</label><br>
+        <textarea name="tsv_text" id="tsv-input"></textarea><br>
+        <button type="submit">Load Data</button>
+        <button type="button" id="clear-step1">Clear Step 1</button>
+    </form>
+
+    <div id="table-container" class="scrollable-output"></div>
+</div>
+
+<div id="step2" style="margin-top:2em;">
+    <h2>STEP 2: Validate Emails</h2>
+    <p id="using-email-column" class="hidden"></p>
+    <div id="email-column-selector" class="hidden">
+        <label for="email-column">Select the column that contains email addresses:</label><br>
+        <select id="email-column"></select>
+    </div>
+    <button type="button" id="validate-emails-btn" disabled>Validate Emails</button>
+    <div id="validation-status" style="margin-top:1em;"></div>
+    <div id="validation-summary" class="hidden"></div>
+</div>
+
+<script src="{{ url_for('static', filename='validate_emails/step1.js') }}"></script>
+<script src="{{ url_for('static', filename='validate_emails/step2.js') }}"></script>
+</body>
+</html>
