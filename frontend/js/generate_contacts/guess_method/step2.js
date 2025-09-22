@@ -117,6 +117,40 @@
     return domains.join(", ");
   }
 
+  function applyEmailDomainExtraction(targetIndexes) {
+    let indexes = [];
+    if (Array.isArray(targetIndexes) && targetIndexes.length) {
+      indexes = targetIndexes.map(function (idx) {
+        return String(idx);
+      });
+    } else {
+      indexes = Object.keys(stepResults);
+    }
+
+    if (!indexes.length) {
+      return false;
+    }
+
+    let modified = false;
+    indexes.forEach(function (idx) {
+      const row = stepResults[idx];
+      if (!row) {
+        return;
+      }
+      const domain = extractDomainsFromValue(row.raw_public_emails);
+      if (domain !== (row.email_domain || "")) {
+        mergeRowData(idx, { email_domain: domain });
+        modified = true;
+      }
+    });
+
+    if (modified) {
+      storeResults();
+    }
+
+    return modified;
+  }
+
   function mergeRowData(rowIndex, updates) {
     const key = String(rowIndex);
     const previous = stepResults[key] ? { ...stepResults[key] } : {};
@@ -256,6 +290,9 @@
     const normalized = normalizeResponse(stepName, rowIndex, response);
     mergeRowData(rowIndex, normalized);
     storeResults();
+    if (stepName === PROCESS_MODES.STEP2) {
+      applyEmailDomainExtraction([rowIndex]);
+    }
   }
 
   async function processRowPipeline(rowIndex, mode, prompts) {
@@ -385,21 +422,7 @@
       alert("No results available to extract domains");
       return;
     }
-    let modified = false;
-    indexes.forEach(function (idx) {
-      const row = stepResults[idx];
-      if (!row) {
-        return;
-      }
-      const domain = extractDomainsFromValue(row.raw_public_emails);
-      if (domain !== (row.email_domain || "")) {
-        mergeRowData(idx, { email_domain: domain });
-        modified = true;
-      }
-    });
-    if (modified) {
-      storeResults();
-    }
+    applyEmailDomainExtraction(indexes);
   });
 
   $("#guess-clear-step2").on("click", function () {
@@ -438,7 +461,7 @@ NO NOT PROVIDE ANY OTHER DETAILS OR SUPPLEMENTAL INFORMATION`;
       $("#guess-instructions").val(defaultStep2Instructions);
     }
 
-    const defaultPrompt = "{business_name} {location} {website}";
+    const defaultPrompt = "{business_name} {website}";
     const savedPrompt = localStorage.getItem(SHARED_PROMPT_KEY);
     if (savedPrompt && savedPrompt.trim() !== "") {
       $("#guess-shared-prompt").val(savedPrompt);

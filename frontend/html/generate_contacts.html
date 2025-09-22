@@ -162,6 +162,20 @@
         <div id="guess-step2" style="margin-top:2em;">
             <h2>STEP 2 &amp; 3: Find Public Emails and Target Contacts</h2>
             <div id="guess-process-section">
+                <div class="guess-step-config">
+                    <h3>Step 2 Instructions</h3>
+                    <label>Instructions:</label><br>
+                    <textarea id="guess-instructions" style="height:80px;"></textarea><br>
+                </div>
+                <div class="guess-step-config">
+                    <h3>Step 3 Instructions</h3>
+                    <label>Instructions:</label><br>
+                    <textarea id="guess-step3-instructions" style="height:80px;"></textarea><br>
+                </div>
+                <div class="guess-shared-prompt">
+                    <label>Prompt (use column names in {braces}):</label><br>
+                    <textarea id="guess-shared-prompt" style="height:100px;"></textarea><br>
+                </div>
                 <div class="guess-process-mode">
                     <strong>Process:</strong>
                     <div class="guess-process-slider">
@@ -172,20 +186,6 @@
                             <span data-value="step3">Process Step 3</span>
                         </div>
                     </div>
-                </div>
-                <div class="guess-step-config">
-                    <h3>Step 2 Instructions</h3>
-                    <label>Instructions:</label><br>
-                    <textarea id="guess-instructions" style="height:80px;"></textarea><br>
-                </div>
-                <div class="guess-shared-prompt">
-                    <label>Prompt (use column names in {braces}):</label><br>
-                    <textarea id="guess-shared-prompt" style="height:100px;"></textarea><br>
-                </div>
-                <div class="guess-step-config">
-                    <h3>Step 3 Instructions</h3>
-                    <label>Instructions:</label><br>
-                    <textarea id="guess-step3-instructions" style="height:80px;"></textarea><br>
                 </div>
                 <label>Row index for single run:</label>
                 <input type="number" id="guess-row-index" value="0" min="0"><br>
