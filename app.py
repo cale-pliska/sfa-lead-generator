@@ -28,6 +28,7 @@ from backend.find_businesses import (
     step2_bp as find_step2_bp,
     step3_bp as find_step3_bp,
 )
+from backend.validate_emails import validate_emails_bp
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(gc_guess_step1_bp)
     app.register_blueprint(gc_guess_step2_bp)
     app.register_blueprint(gc_guess_step3_bp)
+    app.register_blueprint(validate_emails_bp)
 
     return app
 
