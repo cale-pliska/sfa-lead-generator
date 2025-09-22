@@ -15,6 +15,7 @@ from flask import Blueprint, jsonify, render_template, request
 from . import data_store
 
 API_URL = "https://verify.gmass.co/verify"
+RESULTS_COLUMN = "validation_results"
 
 validate_emails_bp = Blueprint("validate_emails", __name__)
 
@@ -39,6 +40,67 @@ def _serialize_result(result: dict[str, Any]) -> str:
     """Serialize the GMass API response for storage inside the DataFrame."""
 
     return json.dumps(result, ensure_ascii=False)
+
+
+def _format_result_display(result: dict[str, Any]) -> str:
+    """Return a short, human-friendly summary for a validation result."""
+
+    if not isinstance(result, dict):
+        return ""
+
+    status = str(result.get("Status") or "Unknown")
+    valid_value = result.get("Valid")
+    if valid_value is True:
+        validity = "Valid"
+    elif valid_value is False:
+        validity = "Invalid"
+    else:
+        validity = "Unknown"
+
+    parts = [f"Status: {status}", f"Validity: {validity}"]
+
+    if result.get("Success") is False and result.get("Error"):
+        parts.append(f"Error: {result['Error']}")
+
+    return " | ".join(parts)
+
+
+def _prepare_validation_cell(value: Any) -> str:
+    """Convert the stored validation payload into a display string."""
+
+    if value is None:
+        return ""
+
+    if isinstance(value, float) and pd.isna(value):
+        return ""
+
+    if isinstance(value, dict):
+        return _format_result_display(value)
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return ""
+        try:
+            parsed = json.loads(stripped)
+        except (TypeError, ValueError):
+            return stripped
+        else:
+            return _format_result_display(parsed)
+
+    return str(value)
+
+
+def _prepare_records_for_response(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Update validation result strings before sending them to the client."""
+
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        record[RESULTS_COLUMN] = _prepare_validation_cell(
+            record.get(RESULTS_COLUMN)
+        )
+    return records
 
 
 def _initialize_validation_state(
@@ -174,23 +236,22 @@ def validate_emails() -> tuple[Any, int] | Any:
     if not api_key:
         return jsonify({"error": "GMASS_API_KEY is not configured"}), 500
 
+    drop_columns = ["email_verification"]
     if reset_requested:
-        data_frame = data_frame.drop(columns=["email_verification"], errors="ignore")
-        data_frame = data_frame.copy()
-        data_frame["email_verification"] = None
-    elif "email_verification" not in data_frame.columns:
-        data_frame = data_frame.copy()
-        data_frame["email_verification"] = None
-    else:
-        # Ensure we do not modify a view of the underlying data.
-        data_frame = data_frame.copy()
+        drop_columns.append(RESULTS_COLUMN)
+
+    data_frame = data_frame.drop(columns=drop_columns, errors="ignore")
+    data_frame = data_frame.copy()
+
+    if RESULTS_COLUMN not in data_frame.columns:
+        data_frame[RESULTS_COLUMN] = None
 
     data_store.DATAFRAME = data_frame
 
     state = _initialize_validation_state(column, total_rows, reset_requested)
     processed_indices: set[int] = state["processed_indices"]
     email_column_position = data_frame.columns.get_loc(column)
-    result_column_position = data_frame.columns.get_loc("email_verification")
+    result_column_position = data_frame.columns.get_loc(RESULTS_COLUMN)
 
     batch_records: list[dict[str, Any]] = []
 
@@ -245,6 +306,8 @@ def validate_emails() -> tuple[Any, int] | Any:
         record["__index"] = start + offset
         batch_records.append(record)
 
+    batch_records = _prepare_records_for_response(batch_records)
+
     data_store.DATAFRAME = data_frame
 
     summary = {
@@ -270,6 +333,7 @@ def validate_emails() -> tuple[Any, int] | Any:
     }
 
     if return_full_dataset:
-        response_payload["records"] = data_frame.to_dict(orient="records")
+        full_records = data_frame.to_dict(orient="records")
+        response_payload["records"] = _prepare_records_for_response(full_records)
 
     return jsonify(response_payload)

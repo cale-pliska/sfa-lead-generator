@@ -112,17 +112,29 @@ $("#validate-emails-btn").on("click", async function () {
   }
 
   const $button = $(this);
-  const batchSize = 20;
+  const batchSize = 10;
   const totalRows = rows.length;
   let resetFlag = true;
   let hasError = false;
   let lastSummary = null;
+  const setProcessingState =
+    typeof window.setValidationProcessingState === "function"
+      ? window.setValidationProcessingState
+      : null;
 
   $button.prop("disabled", true).text("Validating…");
   $("#validation-status").text("Starting validation…");
 
   for (let start = 0; start < totalRows; start += batchSize) {
     const stop = Math.min(start + batchSize, totalRows);
+
+    if (setProcessingState) {
+      setProcessingState(start, stop, true);
+    }
+
+    $("#validation-status").text(
+      `Validating rows ${start + 1}-${stop} of ${totalRows}…`
+    );
 
     try {
       const response = await $.ajax({
@@ -148,6 +160,10 @@ $("#validate-emails-btn").on("click", async function () {
         window.handleValidateEmailsDataLoaded(response.records);
       }
 
+      if (setProcessingState) {
+        setProcessingState(start, stop, false);
+      }
+
       if (response && response.summary) {
         lastSummary = response.summary;
         renderValidationSummary(response.summary);
@@ -170,6 +186,11 @@ $("#validate-emails-btn").on("click", async function () {
       hasError = true;
       let message = "Failed to validate email addresses.";
       let responseJson = xhr && xhr.responseJSON ? xhr.responseJSON : null;
+
+      if (setProcessingState) {
+        setProcessingState(start, stop, false);
+      }
+
       if (!responseJson && xhr && xhr.responseText) {
         try {
           responseJson = JSON.parse(xhr.responseText);
