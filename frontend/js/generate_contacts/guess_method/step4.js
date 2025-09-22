@@ -5,6 +5,8 @@
   const TABLE_SELECTOR = "#guess-step4-results-table";
   const COLUMN_CONTROLS_WRAPPER = "#guess-step4-column-controls";
   const COLUMN_TOGGLE_CONTAINER = "#guess-step4-column-toggle";
+  const POPULATE_EMAILS_BUTTON = "#guess-populate-emails-btn";
+  const CLEAR_STEP4_BUTTON = "#guess-clear-step4-btn";
 
   let parsedContacts = [];
   let availableColumns = [];
@@ -200,6 +202,123 @@
     return null;
   }
 
+  function cleanDomainValue(value) {
+    if (!value && value !== 0) {
+      return "";
+    }
+    let domain = String(value).trim();
+    if (!domain) {
+      return "";
+    }
+    domain = domain.replace(/^mailto:/i, "");
+    const atIndex = domain.lastIndexOf("@");
+    if (atIndex !== -1) {
+      domain = domain.slice(atIndex + 1);
+    }
+    domain = domain.replace(/^https?:\/\//i, "");
+    domain = domain.replace(/^www\./i, "");
+    const colonIndex = domain.indexOf(":");
+    if (colonIndex !== -1) {
+      domain = domain.slice(0, colonIndex);
+    }
+    const slashIndex = domain.indexOf("/");
+    if (slashIndex !== -1) {
+      domain = domain.slice(0, slashIndex);
+    }
+    const questionIndex = domain.indexOf("?");
+    if (questionIndex !== -1) {
+      domain = domain.slice(0, questionIndex);
+    }
+    const hashIndex = domain.indexOf("#");
+    if (hashIndex !== -1) {
+      domain = domain.slice(0, hashIndex);
+    }
+    return domain.trim().toLowerCase();
+  }
+
+  function resolveDomainForEmail(row) {
+    if (!row || typeof row !== "object") {
+      return "";
+    }
+    const columns = Object.keys(row);
+    const domainKey = resolveDomainColumn([row], columns);
+    if (domainKey) {
+      const domain = cleanDomainValue(row[domainKey]);
+      if (domain) {
+        return domain;
+      }
+    }
+    const websiteKey = resolveWebsiteColumn([row], columns);
+    if (websiteKey) {
+      const domain = cleanDomainValue(row[websiteKey]);
+      if (domain) {
+        return domain;
+      }
+    }
+    return "";
+  }
+
+  function sanitizeNamePart(value) {
+    if (!value && value !== 0) {
+      return "";
+    }
+    return String(value)
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .toLowerCase();
+  }
+
+  function buildEmailVariationsForRow(row) {
+    const variations = [];
+    const domain = resolveDomainForEmail(row);
+    if (!domain) {
+      return variations;
+    }
+
+    const first = sanitizeNamePart(
+      row.first_name || row.firstname || row.first || row.firstName
+    );
+    const last = sanitizeNamePart(
+      row.last_name || row.lastname || row.last || row.lastName
+    );
+
+    if (!first) {
+      return variations;
+    }
+
+    const firstInitial = first.charAt(0);
+    const existing = new Set();
+
+    function add(pattern, localPart) {
+      if (!pattern || !localPart) {
+        return;
+      }
+      const email = localPart + "@" + domain;
+      const key = pattern + "::" + email.toLowerCase();
+      if (existing.has(key)) {
+        return;
+      }
+      existing.add(key);
+      variations.push({ pattern: pattern, email: email });
+    }
+
+    if (first && last) {
+      add("First.Last", first + "." + last);
+    }
+    if (firstInitial && last) {
+      add("FirstInitial.Last", firstInitial + "." + last);
+    }
+    add("First", first);
+    if (first && last) {
+      add("FirstLast", first + last);
+    }
+    if (firstInitial && last) {
+      add("FirstInitialLast", firstInitial + last);
+    }
+
+    return variations;
+  }
+
   function formatColumnLabel(column) {
     if (!column && column !== 0) {
       return "";
@@ -312,6 +431,8 @@
       "business_name",
       "first_name",
       "last_name",
+      "email",
+      "email_pattern",
       "role",
       "email_domain",
       "domain",
@@ -376,6 +497,12 @@
     { id: "business_name", label: "Business Name", resolve: resolveBusinessNameColumn },
     { id: "first_name", label: "First Name", match: matchesExact("first_name") },
     { id: "last_name", label: "Last Name", match: matchesExact("last_name") },
+    { id: "email", label: "Email", match: matchesExact("email") },
+    {
+      id: "email_pattern",
+      label: "Email Pattern",
+      match: matchesExact("email_pattern"),
+    },
     { id: "role", label: "Role", match: matchesExact("role") },
     { id: "domain", label: "Domain", resolve: resolveDomainColumn },
     { id: "website", label: "Website", resolve: resolveWebsiteColumn },
@@ -631,6 +758,83 @@
     refreshContactsDisplay();
   }
 
+  function populateEmailsForContacts() {
+    if (!Array.isArray(parsedContacts) || !parsedContacts.length) {
+      alert("No contacts available to populate. Please create contacts first.");
+      return;
+    }
+
+    const baseRows = parsedContacts
+      .filter(function (row) {
+        return row && typeof row === "object" && !row.email_pattern;
+      })
+      .map(function (row) {
+        return ensureCanonicalFields(cloneRow(row));
+      });
+
+    if (!baseRows.length) {
+      alert("No base contacts are available. Please create contacts first.");
+      return;
+    }
+
+    const existingGenerated = parsedContacts.filter(function (row) {
+      return row && typeof row === "object" && row.email_pattern;
+    });
+
+    const updatedRows = [];
+    let generatedCount = 0;
+
+    baseRows.forEach(function (row) {
+      updatedRows.push(row);
+      const variations = buildEmailVariationsForRow(row);
+      variations.forEach(function (variation) {
+        const emailRow = ensureCanonicalFields(cloneRow(row));
+        emailRow.email = variation.email;
+        emailRow.email_pattern = variation.pattern;
+        updatedRows.push(emailRow);
+        generatedCount += 1;
+      });
+    });
+
+    if (!generatedCount) {
+      if (existingGenerated.length) {
+        alert("Email variations are already populated for the available contacts.");
+        refreshContactsDisplay();
+        return;
+      }
+      alert(
+        "Unable to generate email variations. Ensure contacts include first name, last name, and domain details."
+      );
+      parsedContacts = normalizeContacts(baseRows);
+      storeContacts(parsedContacts);
+      refreshContactsDisplay();
+      return;
+    }
+
+    parsedContacts = normalizeContacts(updatedRows);
+    storeContacts(parsedContacts);
+    refreshContactsDisplay();
+  }
+
+  function clearStep4Results() {
+    parsedContacts = [];
+    availableColumns = [];
+    selectedColumns = [];
+    columnLabels = {};
+    window.guessStep4Contacts = [];
+    try {
+      localStorage.removeItem(CONTACTS_STORAGE_KEY);
+    } catch (err) {
+      console.error("Unable to clear stored Step 4 contacts", err);
+    }
+    try {
+      localStorage.removeItem(COLUMN_SELECTION_KEY);
+    } catch (err) {
+      console.error("Unable to clear Step 4 column selection", err);
+    }
+    refreshContactsDisplay();
+  }
+
   $("#guess-create-contacts-btn").on("click", function () {
     const contacts = buildContactRows();
     parsedContacts = contacts;
@@ -638,8 +842,16 @@
     refreshContactsDisplay();
   });
 
+  $(POPULATE_EMAILS_BUTTON).on("click", function () {
+    populateEmailsForContacts();
+  });
+
   $("#guess-copy-step4-results").on("click", function () {
     copyTableToClipboard(TABLE_SELECTOR);
+  });
+
+  $(CLEAR_STEP4_BUTTON).on("click", function () {
+    clearStep4Results();
   });
 
   $(document).on("guessStep2ResultsUpdated", function (event, results) {
