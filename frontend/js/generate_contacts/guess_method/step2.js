@@ -1,16 +1,44 @@
 (function () {
   const RESULTS_KEY = "generate_contacts_guess_step2_results";
-  const STEP2_PROMPT_KEY = "generate_contacts_guess_step2_prompt";
-  const STEP3_PROMPT_KEY = "generate_contacts_guess_step3_prompt";
+  const SHARED_PROMPT_KEY = "generate_contacts_guess_shared_prompt";
   const STEP3_INSTRUCTIONS_KEY = "generate_contacts_guess_step3_instructions";
   const STEP3_RESULTS_KEY = "generate_contacts_guess_step3_results";
   const MODE_STORAGE_KEY = "generate_contacts_guess_process_mode";
+  const LEGACY_PROMPT_KEYS = [
+    "generate_contacts_guess_step2_prompt",
+    "generate_contacts_guess_step3_prompt",
+  ];
 
   const PROCESS_MODES = {
     BOTH: "both",
     STEP2: "step2",
     STEP3: "step3",
   };
+
+  const PROCESS_SLIDER_VALUES = [
+    PROCESS_MODES.STEP2,
+    PROCESS_MODES.BOTH,
+    PROCESS_MODES.STEP3,
+  ];
+
+  function modeForSliderPosition(position) {
+    return PROCESS_SLIDER_VALUES[position] || PROCESS_MODES.BOTH;
+  }
+
+  function sliderPositionForMode(mode) {
+    const index = PROCESS_SLIDER_VALUES.indexOf(mode);
+    if (index === -1) {
+      return PROCESS_SLIDER_VALUES.indexOf(PROCESS_MODES.BOTH);
+    }
+    return index;
+  }
+
+  function updateSliderLabels(mode) {
+    $(".guess-process-labels span").removeClass("active");
+    $(".guess-process-labels span[data-value='" + mode + "']").addClass(
+      "active"
+    );
+  }
 
   function replaceStepResults(nextResults) {
     const normalized = nextResults && typeof nextResults === "object" ? nextResults : {};
@@ -87,6 +115,40 @@
       }
     });
     return domains.join(", ");
+  }
+
+  function applyEmailDomainExtraction(targetIndexes) {
+    let indexes = [];
+    if (Array.isArray(targetIndexes) && targetIndexes.length) {
+      indexes = targetIndexes.map(function (idx) {
+        return String(idx);
+      });
+    } else {
+      indexes = Object.keys(stepResults);
+    }
+
+    if (!indexes.length) {
+      return false;
+    }
+
+    let modified = false;
+    indexes.forEach(function (idx) {
+      const row = stepResults[idx];
+      if (!row) {
+        return;
+      }
+      const domain = extractDomainsFromValue(row.raw_public_emails);
+      if (domain !== (row.email_domain || "")) {
+        mergeRowData(idx, { email_domain: domain });
+        modified = true;
+      }
+    });
+
+    if (modified) {
+      storeResults();
+    }
+
+    return modified;
   }
 
   function mergeRowData(rowIndex, updates) {
@@ -228,6 +290,9 @@
     const normalized = normalizeResponse(stepName, rowIndex, response);
     mergeRowData(rowIndex, normalized);
     storeResults();
+    if (stepName === PROCESS_MODES.STEP2) {
+      applyEmailDomainExtraction([rowIndex]);
+    }
   }
 
   async function processRowPipeline(rowIndex, mode, prompts) {
@@ -298,73 +363,29 @@
   }
 
   function gatherPrompts() {
+    const sharedPrompt = $("#guess-shared-prompt").val() || "";
     return {
       step2Instructions: $("#guess-instructions").val() || "",
-      step2Prompt: $("#guess-prompt").val() || "",
+      step2Prompt: sharedPrompt,
       step3Instructions: $("#guess-step3-instructions").val() || "",
-      step3Prompt: $("#guess-step3-prompt").val() || "",
+      step3Prompt: sharedPrompt,
     };
   }
 
   function getSelectedMode() {
-    const selected = $(
-      'input[name="guess-process-mode"]:checked'
-    ).val();
-    if (
-      selected === PROCESS_MODES.BOTH ||
-      selected === PROCESS_MODES.STEP2 ||
-      selected === PROCESS_MODES.STEP3
-    ) {
-      return selected;
-    }
-    return PROCESS_MODES.BOTH;
+    const position = parseInt($("#guess-process-slider").val(), 10);
+    return modeForSliderPosition(position);
   }
 
   function setSelectedMode(mode) {
-    const value =
+    const normalized =
       mode === PROCESS_MODES.STEP2 || mode === PROCESS_MODES.STEP3
         ? mode
         : PROCESS_MODES.BOTH;
-    $("input[name='guess-process-mode']").prop("checked", false);
-    $("input[name='guess-process-mode'][value='" + value + "']").prop(
-      "checked",
-      true
-    );
-    localStorage.setItem(MODE_STORAGE_KEY, value);
-  }
-
-  function fallbackCopy(text) {
-    const temp = $("<textarea>");
-    $("body").append(temp);
-    temp.val(text).select();
-    document.execCommand("copy");
-    temp.remove();
-  }
-
-  function copyTableToClipboard(selector) {
-    const table = $(selector);
-    if (table.length === 0) {
-      alert("No data to copy.");
-      return;
-    }
-    const rows = [];
-    table.find("tr").each(function () {
-      const cols = [];
-      $(this)
-        .find("th,td")
-        .each(function () {
-          cols.push($(this).text());
-        });
-      rows.push(cols.join("\t"));
-    });
-    const tsv = rows.join("\n");
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(tsv).catch(function () {
-        fallbackCopy(tsv);
-      });
-    } else {
-      fallbackCopy(tsv);
-    }
+    const sliderValue = sliderPositionForMode(normalized);
+    $("#guess-process-slider").val(sliderValue);
+    updateSliderLabels(normalized);
+    localStorage.setItem(MODE_STORAGE_KEY, normalized);
   }
 
   $("#guess-process-single-btn").on("click", function () {
@@ -401,35 +422,7 @@
       alert("No results available to extract domains");
       return;
     }
-    let modified = false;
-    indexes.forEach(function (idx) {
-      const row = stepResults[idx];
-      if (!row) {
-        return;
-      }
-      const domain = extractDomainsFromValue(row.raw_public_emails);
-      if (domain !== (row.email_domain || "")) {
-        mergeRowData(idx, { email_domain: domain });
-        modified = true;
-      }
-    });
-    if (modified) {
-      storeResults();
-    }
-  });
-
-  $("#guess-step3-clear").on("click", function () {
-    let modified = false;
-    Object.keys(stepResults).forEach(function (idx) {
-      const row = stepResults[idx];
-      if (row && Object.prototype.hasOwnProperty.call(row, "raw_contacts")) {
-        delete row.raw_contacts;
-        modified = true;
-      }
-    });
-    if (modified) {
-      storeResults();
-    }
+    applyEmailDomainExtraction(indexes);
   });
 
   $("#guess-clear-step2").on("click", function () {
@@ -440,12 +433,15 @@
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   });
 
-  $("#guess-step3-copy-results").on("click", function () {
-    copyTableToClipboard("#guess-results-table");
+  $("#guess-process-slider").on("input change", function () {
+    const position = parseInt($(this).val(), 10) || 0;
+    const mode = modeForSliderPosition(position);
+    setSelectedMode(mode);
   });
 
-  $("input[name='guess-process-mode']").on("change", function () {
-    setSelectedMode($(this).val());
+  $(".guess-process-labels span").on("click", function () {
+    const mode = $(this).attr("data-value");
+    setSelectedMode(mode);
   });
 
   $(document).on("guessStep2ResultsUpdated", function (event, latest) {
@@ -456,36 +452,51 @@
   });
 
   $(document).ready(function () {
-    const defaultStep2Instructions = `You are a research assistant tasked with locating public-facing email inboxes for a company.
+    const defaultStep2Instructions = `provide 3 publicly available email addresses for the company.
 
-Given the business name, location, and website, find three publicly listed email addresses that a prospect could use to reach the company. Prioritize shared inboxes such as info@, contact@, support@, hello@, or similar addresses that appear on the website or reputable directories.
+ONLY list the emails in a list ['e1@co.com, 'e2@co.com', ...]
 
-Return exactly three email strings in a JSON array. If fewer than three unique emails are available, repeat the best available emails so the array still contains three entries.
-
-Output format example:
-["info@example.com", "support@example.com", "contact@example.com"]
-
-Respond with only the JSON array.`;
+NO NOT PROVIDE ANY OTHER DETAILS OR SUPPLEMENTAL INFORMATION`;
     if (!$("#guess-instructions").val()) {
       $("#guess-instructions").val(defaultStep2Instructions);
     }
 
-    const defaultPrompt = "{business_name} {location} {website}";
-    const savedPrompt = localStorage.getItem(STEP2_PROMPT_KEY);
+    const defaultPrompt = "{business_name} {website}";
+    const savedPrompt = localStorage.getItem(SHARED_PROMPT_KEY);
     if (savedPrompt && savedPrompt.trim() !== "") {
-      $("#guess-prompt").val(savedPrompt);
+      $("#guess-shared-prompt").val(savedPrompt);
     } else {
-      $("#guess-prompt").val(defaultPrompt);
+      $("#guess-shared-prompt").val(defaultPrompt);
     }
-    $("#guess-prompt").on("input", function () {
-      localStorage.setItem(STEP2_PROMPT_KEY, $(this).val());
+    $("#guess-shared-prompt").on("input", function () {
+      localStorage.setItem(SHARED_PROMPT_KEY, $(this).val());
+    });
+    LEGACY_PROMPT_KEYS.forEach(function (key) {
+      localStorage.removeItem(key);
     });
 
-    const defaultStep3Instructions = `You are a sales research assistant.
+    const defaultStep3Instructions = `You are a contact generation expert for sales.
 
-Given the business name, location, and website, identify every contact who matches the operations leadership profile (e.g., COO, Head of Operations, Director of Operations, Operations Manager, or similar senior roles). For each matching contact, provide their first name, last name, and role.
+For the business provided, find leadership contacts. Prioritize accuracy in your contacts.
 
-Return the contacts as a JSON array of arrays in the form [["First", "Last", "Role"], ...]. Only include contacts that match the profile and respond with just the JSON array.`;
+Required output format must contain:
+- firstname
+- lastname
+- role
+
+⚠️ Do not include company name, emails, or any extra explanation.
+⚠️ Output only the raw JSON.
+
+Example input:
+ABC Company
+
+Example output:
+[
+  ["Andrew", "McRae", "Chief Executive Officer"],
+  ["Jeffrey", "Hasham", "Chief Financial Officer"],
+  ["Charles", "Reichmann", "Co-Founder & Managing Partner"],
+  ["Jarrad", "Segal", "Co-Founder & Managing Partner"]
+]`;
     const savedStep3Instructions = localStorage.getItem(
       STEP3_INSTRUCTIONS_KEY
     );
@@ -496,16 +507,6 @@ Return the contacts as a JSON array of arrays in the form [["First", "Last", "Ro
     }
     $("#guess-step3-instructions").on("input", function () {
       localStorage.setItem(STEP3_INSTRUCTIONS_KEY, $(this).val());
-    });
-
-    const savedStep3Prompt = localStorage.getItem(STEP3_PROMPT_KEY);
-    if (savedStep3Prompt && savedStep3Prompt.trim() !== "") {
-      $("#guess-step3-prompt").val(savedStep3Prompt);
-    } else {
-      $("#guess-step3-prompt").val(defaultPrompt);
-    }
-    $("#guess-step3-prompt").on("input", function () {
-      localStorage.setItem(STEP3_PROMPT_KEY, $(this).val());
     });
 
     const savedMode = localStorage.getItem(MODE_STORAGE_KEY);
@@ -542,13 +543,9 @@ Return the contacts as a JSON array of arrays in the form [["First", "Last", "Ro
   });
 
   $(window).on("beforeunload", function () {
-    const step2PromptValue = $("#guess-prompt").val();
-    if (typeof step2PromptValue === "string") {
-      localStorage.setItem(STEP2_PROMPT_KEY, step2PromptValue);
-    }
-    const step3PromptValue = $("#guess-step3-prompt").val();
-    if (typeof step3PromptValue === "string") {
-      localStorage.setItem(STEP3_PROMPT_KEY, step3PromptValue);
+    const sharedPromptValue = $("#guess-shared-prompt").val();
+    if (typeof sharedPromptValue === "string") {
+      localStorage.setItem(SHARED_PROMPT_KEY, sharedPromptValue);
     }
     const step3InstructionsValue = $("#guess-step3-instructions").val();
     if (typeof step3InstructionsValue === "string") {
