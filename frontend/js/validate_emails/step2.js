@@ -59,7 +59,13 @@ function renderValidationSummary(summary) {
   const validityEntries = Object.entries(summary.validity_counts || {});
 
   let html = "<h3>Validation Summary</h3>";
-  html += `<p><strong>Total processed:</strong> ${summary.total}</p>`;
+  const hasOverallTotal =
+    typeof summary.overall_total === "number" &&
+    summary.overall_total >= summary.total;
+  const totalLabel = hasOverallTotal
+    ? `${summary.total} of ${summary.overall_total}`
+    : summary.total;
+  html += `<p><strong>Total processed:</strong> ${totalLabel}</p>`;
   if (statusEntries.length) {
     html += "<p><strong>Status breakdown:</strong></p><ul>";
     statusEntries.forEach(([status, count]) => {
@@ -90,7 +96,7 @@ $("#email-column").on("change", function () {
   $("#validate-emails-btn").prop("disabled", !selectedEmailColumn);
 });
 
-$("#validate-emails-btn").on("click", function () {
+$("#validate-emails-btn").on("click", async function () {
   if (!selectedEmailColumn) {
     $("#validation-status").text(
       "Please select the column that contains email addresses."
@@ -98,29 +104,73 @@ $("#validate-emails-btn").on("click", function () {
     return;
   }
 
-  const $button = $(this);
-  $button.prop("disabled", true).text("Validating…");
-  $("#validation-status").text("Validating email addresses…");
+  const state = window.validateEmailsState || {};
+  const rows = Array.isArray(state.data) ? state.data : [];
+  if (!rows.length) {
+    $("#validation-status").text("No data available for validation.");
+    return;
+  }
 
-  $.ajax({
-    url: "/validate_emails/validate",
-    method: "POST",
-    contentType: "application/json",
-    dataType: "json",
-    data: JSON.stringify({ column: selectedEmailColumn }),
-    success: function (response) {
-      if (response && response.records) {
+  const $button = $(this);
+  const batchSize = 20;
+  const totalRows = rows.length;
+  let resetFlag = true;
+  let hasError = false;
+  let lastSummary = null;
+
+  $button.prop("disabled", true).text("Validating…");
+  $("#validation-status").text("Starting validation…");
+
+  for (let start = 0; start < totalRows; start += batchSize) {
+    const stop = Math.min(start + batchSize, totalRows);
+
+    try {
+      const response = await $.ajax({
+        url: "/validate_emails/validate",
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify({
+          column: selectedEmailColumn,
+          start,
+          stop,
+          reset: resetFlag,
+        }),
+      });
+
+      resetFlag = false;
+
+      if (response && response.batch && Array.isArray(response.batch.records)) {
+        window.handleValidateEmailsDataLoaded(response.batch.records, {
+          merge: true,
+        });
+      } else if (response && response.records) {
         window.handleValidateEmailsDataLoaded(response.records);
       }
+
       if (response && response.summary) {
+        lastSummary = response.summary;
         renderValidationSummary(response.summary);
       }
-      $("#validation-status").text("Validation completed.");
-    },
-    error: function (xhr) {
+
+      if (response && response.progress) {
+        const processed = response.progress.processed || stop;
+        const total = response.progress.total || totalRows;
+        const completed = Boolean(response.progress.completed);
+        const statusMessage = completed
+          ? "Validation completed."
+          : `Validated ${processed} of ${total} email addresses…`;
+        $("#validation-status").text(statusMessage);
+      } else {
+        $("#validation-status").text(
+          `Validated rows ${start + 1}-${stop} of ${totalRows}…`
+        );
+      }
+    } catch (xhr) {
+      hasError = true;
       let message = "Failed to validate email addresses.";
-      let responseJson = xhr.responseJSON;
-      if (!responseJson && xhr.responseText) {
+      let responseJson = xhr && xhr.responseJSON ? xhr.responseJSON : null;
+      if (!responseJson && xhr && xhr.responseText) {
         try {
           responseJson = JSON.parse(xhr.responseText);
         } catch (err) {
@@ -142,9 +192,15 @@ $("#validate-emails-btn").on("click", function () {
               : [],
         });
       }
-    },
-    complete: function () {
-      $button.prop("disabled", !selectedEmailColumn).text("Validate Emails");
-    },
-  });
+
+      break;
+    }
+  }
+
+  if (!hasError && lastSummary) {
+    renderValidationSummary(lastSummary);
+    $("#validation-status").text("Validation completed.");
+  }
+
+  $button.prop("disabled", !selectedEmailColumn).text("Validate Emails");
 });

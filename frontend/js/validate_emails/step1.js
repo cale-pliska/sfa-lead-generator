@@ -7,21 +7,39 @@ const validateEmailsState = {
   columns: [],
 };
 
+function ensureColumnsFromRow(row) {
+  if (!row || typeof row !== "object") {
+    return;
+  }
+
+  Object.keys(row).forEach((key) => {
+    if (!validateEmailsState.columns.includes(key)) {
+      validateEmailsState.columns.push(key);
+    }
+  });
+}
+
 function renderValidateEmailsTable(data) {
   if (!data || !data.length) {
     $("#table-container").html("No rows");
     return;
   }
 
+  const columns =
+    validateEmailsState.columns.length > 0
+      ? validateEmailsState.columns
+      : Object.keys(data[0]);
+
   let html = "<table><thead><tr><th>index</th>";
-  Object.keys(data[0]).forEach((column) => {
+  columns.forEach((column) => {
     html += `<th>${column}</th>`;
   });
   html += "</tr></thead><tbody>";
 
   data.forEach((row, index) => {
     html += `<tr><td>${index}</td>`;
-    Object.values(row).forEach((value) => {
+    columns.forEach((column) => {
+      const value = row[column];
       const cellValue = value === null || value === undefined ? "" : value;
       html += `<td>${cellValue}</td>`;
     });
@@ -32,14 +50,47 @@ function renderValidateEmailsTable(data) {
   $("#table-container").html(html);
 }
 
-function handleValidateEmailsDataLoaded(data) {
-  validateEmailsState.data = Array.isArray(data) ? data : [];
-  validateEmailsState.columns = validateEmailsState.data.length
-    ? Object.keys(validateEmailsState.data[0])
-    : [];
+function handleValidateEmailsDataLoaded(data, options = {}) {
+  const shouldMerge = Boolean(options && options.merge);
+
+  if (!shouldMerge) {
+    validateEmailsState.data = Array.isArray(data) ? data : [];
+    validateEmailsState.columns = validateEmailsState.data.length
+      ? Object.keys(validateEmailsState.data[0])
+      : [];
+    validateEmailsState.data.forEach((row) => {
+      ensureColumnsFromRow(row);
+    });
+  } else if (
+    Array.isArray(data) &&
+    Array.isArray(validateEmailsState.data) &&
+    validateEmailsState.data.length
+  ) {
+    data.forEach((record) => {
+      if (!record || typeof record.__index !== "number") {
+        return;
+      }
+      const index = record.__index;
+      const updatedRow = { ...record };
+      delete updatedRow.__index;
+
+      const existingRow =
+        index >= 0 && index < validateEmailsState.data.length
+          ? validateEmailsState.data[index]
+          : {};
+      validateEmailsState.data[index] = {
+        ...existingRow,
+        ...updatedRow,
+      };
+      ensureColumnsFromRow(updatedRow);
+    });
+  }
 
   renderValidateEmailsTable(validateEmailsState.data);
-  $(document).trigger("validateEmails:dataLoaded", [validateEmailsState]);
+
+  if (!shouldMerge) {
+    $(document).trigger("validateEmails:dataLoaded", [validateEmailsState]);
+  }
 }
 
 function saveStep1State() {
