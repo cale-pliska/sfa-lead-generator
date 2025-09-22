@@ -15,6 +15,8 @@
     STEP3: "step3",
   };
 
+  const MISSING_DOMAIN_MESSAGE = "Extract domain column cannot be empty";
+
   const PROCESS_SLIDER_VALUES = [
     PROCESS_MODES.STEP2,
     PROCESS_MODES.BOTH,
@@ -319,6 +321,18 @@
         break;
       }
       const task = tasks[i];
+      if (task.step === PROCESS_MODES.STEP3) {
+        const existing = stepResults[String(rowIndex)] || {};
+        const domainValue =
+          typeof existing.email_domain === "string"
+            ? existing.email_domain.trim()
+            : "";
+        if (!domainValue) {
+          mergeRowData(rowIndex, { raw_contacts: MISSING_DOMAIN_MESSAGE });
+          storeResults();
+          continue;
+        }
+      }
       const payload = {
         prompt: task.prompt,
         instructions: task.instructions,
@@ -394,7 +408,7 @@
     processRows([rowIndex], getSelectedMode(), prompts);
   });
 
-  $("#guess-process-range-btn").on("click", function () {
+  $("#guess-process-range-btn").on("click", async function () {
     const prompts = gatherPrompts();
     const start = parseInt($("#guess-start-index").val(), 10) || 0;
     const end = parseInt($("#guess-end-index").val(), 10) || 0;
@@ -406,7 +420,10 @@
     for (let i = start; i <= end; i += 1) {
       indexes.push(i);
     }
-    processRows(indexes, getSelectedMode(), prompts);
+    await processRows(indexes, getSelectedMode(), prompts);
+    if (!cancelProcessing && indexes.length) {
+      applyEmailDomainExtraction(indexes);
+    }
   });
 
   $("#guess-cancel-step2").on("click", function () {

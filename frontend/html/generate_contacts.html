@@ -201,6 +201,13 @@
             </div>
             <div id="guess-results-container" class="scrollable-output" style="margin-top:1em;"></div>
         </div>
+
+        <div id="guess-step4" style="margin-top:2em;">
+            <h2>STEP 4: Parse Contacts</h2>
+            <button id="guess-create-contacts-btn">Create Contacts</button>
+            <button type="button" id="guess-copy-step4-results">Copy Results</button>
+            <div id="guess-step4-container" class="scrollable-output" style="margin-top:1em;"></div>
+        </div>
     </section>
 </div>
 
@@ -228,5 +235,6 @@
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step1.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step2.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4.js') }}"></script>
 </body>
 </html>
