@@ -84,6 +84,84 @@
         .guess-shared-prompt {
             margin-top: 1em;
         }
+        #guess-step4-column-controls {
+            margin-top: 1em;
+            display: none;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75em;
+            background-color: #f8f9fa;
+            border: 1px solid #dfe1e5;
+            border-radius: 0.75em;
+            padding: 0.75em 1em;
+        }
+        #guess-step4-column-controls strong {
+            font-size: 0.95em;
+            color: #1a73e8;
+        }
+        #guess-step4-column-toggle {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+        }
+        .guess-step4-toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5em;
+            padding: 0.25em 0.85em 0.25em 0.35em;
+            border-radius: 999px;
+            background-color: #f1f3f4;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            user-select: none;
+        }
+        .guess-step4-toggle input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .guess-step4-toggle-slider {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background-color: #d7dfe7;
+            border-radius: 999px;
+            transition: background-color 0.2s ease;
+            box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+        }
+        .guess-step4-toggle-slider::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 2px;
+            left: 2px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+        .guess-step4-toggle-label {
+            font-size: 0.9em;
+            color: #3c4043;
+            font-weight: 500;
+        }
+        .guess-step4-toggle input:checked + .guess-step4-toggle-slider {
+            background-color: #1a73e8;
+        }
+        .guess-step4-toggle input:checked + .guess-step4-toggle-slider::after {
+            transform: translateX(16px);
+        }
+        .guess-step4-toggle input:checked + .guess-step4-toggle-slider + .guess-step4-toggle-label {
+            color: #1a73e8;
+            font-weight: 600;
+        }
+        .guess-step4-empty {
+            padding: 1em;
+            color: #5f6368;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -201,6 +279,17 @@
             </div>
             <div id="guess-results-container" class="scrollable-output" style="margin-top:1em;"></div>
         </div>
+
+        <div id="guess-step4" style="margin-top:2em;">
+            <h2>STEP 4: Parse Contacts</h2>
+            <button id="guess-create-contacts-btn">Create Contacts</button>
+            <button type="button" id="guess-copy-step4-results">Copy Results</button>
+            <div id="guess-step4-column-controls">
+                <strong>Columns:</strong>
+                <div id="guess-step4-column-toggle"></div>
+            </div>
+            <div id="guess-step4-container" class="scrollable-output" style="margin-top:1em;"></div>
+        </div>
     </section>
 </div>
 
@@ -228,5 +317,6 @@
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step1.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step2.js') }}"></script>
 <script src="{{ url_for('static', filename='generate_contacts/guess_method/step3.js') }}"></script>
+<script src="{{ url_for('static', filename='generate_contacts/guess_method/step4.js') }}"></script>
 </body>
 </html>
