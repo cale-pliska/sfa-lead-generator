@@ -10,11 +10,30 @@
   const UI = window.guessStep4UI;
 
   const TABLE_CONTAINER = "#guess-step4-container";
+  const STALE_CONTACTS_MESSAGE =
+    "Step 2 results changed. Generate contacts again to view updates.";
 
   let parsedContacts = [];
   let availableColumns = [];
   let selectedColumns = [];
   let columnLabels = {};
+  let hasDisplayedContacts = false;
+
+  function resetContactsState(message) {
+    parsedContacts = [];
+    availableColumns = [];
+    selectedColumns = [];
+    columnLabels = {};
+    hasDisplayedContacts = false;
+    UI.showEmptyState(message || "No contacts available");
+    $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
+    $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
+  }
+
+  function invalidateContactsData(message) {
+    Storage.clearContacts();
+    resetContactsState(message || STALE_CONTACTS_MESSAGE);
+  }
 
   function ensureEmailColumnsSelected() {
     const requiredColumns = ["email", "email_pattern"];
@@ -94,12 +113,7 @@
 
   function refreshContactsDisplay() {
     if (!Array.isArray(parsedContacts) || !parsedContacts.length) {
-      availableColumns = [];
-      selectedColumns = [];
-      columnLabels = {};
-      $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
-      $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
-      UI.showEmptyState("No contacts available");
+      resetContactsState("No contacts available");
       return;
     }
 
@@ -107,6 +121,7 @@
     updateAvailableColumns(parsedContacts);
     UI.renderColumnControls(availableColumns, selectedColumns, columnLabels, handleColumnToggle);
     UI.renderContactsTable(TABLE_CONTAINER, parsedContacts, selectedColumns, columnLabels);
+    hasDisplayedContacts = true;
   }
 
   function createContacts() {
@@ -158,15 +173,9 @@
   }
 
   function clearStep4Results() {
-    parsedContacts = [];
-    availableColumns = [];
-    selectedColumns = [];
-    columnLabels = {};
     Storage.clearContacts();
     Storage.clearSelectedColumns();
-    UI.showEmptyState("No contacts available");
-    $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
-    $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
+    resetContactsState("No contacts available");
   }
 
   function loadStoredContacts() {
@@ -186,6 +195,16 @@
   $(document).on("guessStep2ResultsUpdated", function (event, results) {
     if (results && typeof results === "object") {
       window.guessStep2Results = results;
+    }
+
+    const hadContacts =
+      hasDisplayedContacts ||
+      (Array.isArray(parsedContacts) && parsedContacts.length > 0) ||
+      (Array.isArray(window.guessStep4ContactsData) &&
+        window.guessStep4ContactsData.length > 0);
+
+    if (hadContacts) {
+      invalidateContactsData();
     }
   });
 

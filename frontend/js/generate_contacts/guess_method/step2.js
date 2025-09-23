@@ -3,6 +3,7 @@
   const SHARED_PROMPT_KEY = "generate_contacts_guess_shared_prompt";
   const STEP3_INSTRUCTIONS_KEY = "generate_contacts_guess_step3_instructions";
   const STEP3_RESULTS_KEY = "generate_contacts_guess_step3_results";
+  const STEP4_CONTACTS_KEY = "generate_contacts_guess_step4_contacts";
   const MODE_STORAGE_KEY = "generate_contacts_guess_process_mode";
   const LEGACY_PROMPT_KEYS = [
     "generate_contacts_guess_step2_prompt",
@@ -260,6 +261,7 @@
     window.guessStep2Results = stepResults;
     localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
     localStorage.removeItem(STEP3_RESULTS_KEY);
+    localStorage.removeItem(STEP4_CONTACTS_KEY);
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   }
 
@@ -490,6 +492,7 @@
     stepResults = replaceStepResults({});
     localStorage.removeItem(RESULTS_KEY);
     localStorage.removeItem(STEP3_RESULTS_KEY);
+    localStorage.removeItem(STEP4_CONTACTS_KEY);
     $("#guess-results-container").html("No results");
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   });
