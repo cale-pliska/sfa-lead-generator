@@ -13,6 +13,31 @@
   const STALE_CONTACTS_MESSAGE =
     "Step 2 results changed. Generate contacts again to view updates.";
 
+  function flushPendingStep2Edit() {
+    const activeElement = document.activeElement;
+    if (!activeElement) {
+      return Promise.resolve();
+    }
+
+    const $active = $(activeElement);
+    const isEditableCell =
+      $active.length &&
+      $active.is("td[data-column]") &&
+      $active.closest("#guess-results-container").length;
+
+    if (!isEditableCell) {
+      return Promise.resolve();
+    }
+
+    if (typeof activeElement.blur === "function") {
+      activeElement.blur();
+    }
+
+    return new Promise(function (resolve) {
+      setTimeout(resolve, 0);
+    });
+  }
+
   let parsedContacts = [];
   let availableColumns = [];
   let selectedColumns = [];
@@ -209,8 +234,16 @@
   });
 
   $(function () {
-    $("#guess-create-contacts-btn").on("click", createContacts);
-    $(Constants.POPULATE_EMAILS_BUTTON).on("click", populateEmails);
+    $("#guess-create-contacts-btn").on("click", function () {
+      flushPendingStep2Edit().then(function () {
+        createContacts();
+      });
+    });
+    $(Constants.POPULATE_EMAILS_BUTTON).on("click", function () {
+      flushPendingStep2Edit().then(function () {
+        populateEmails();
+      });
+    });
     $("#guess-copy-step4-results").on("click", handleCopy);
     $(Constants.CLEAR_STEP4_BUTTON).on("click", clearStep4Results);
     loadStoredContacts();
