@@ -87,6 +87,14 @@
     }
   }
 
+  function escapeAttributeValue(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
   function extractDomainsFromValue(value) {
     if (!value) {
       return "";
@@ -204,12 +212,48 @@
       html += "<tr><td>" + idx + "</td>";
       columns.forEach(function (col) {
         const value = row[col];
-        html += "<td>" + formatValue(value) + "</td>";
+        html +=
+          '<td contenteditable="true" data-row="' +
+          escapeAttributeValue(idx) +
+          '" data-column="' +
+          escapeAttributeValue(col) +
+          '">' +
+          formatValue(value) +
+          "</td>";
       });
       html += "</tr>";
     });
     html += "</tbody></table>";
     $("#guess-results-container").html(html);
+  }
+
+  function commitEditableCell($cell) {
+    const columnName = $cell.attr("data-column");
+    const rowAttr = $cell.attr("data-row");
+    if (!columnName || typeof rowAttr === "undefined") {
+      return;
+    }
+
+    const rowIndex = parseInt(rowAttr, 10);
+    if (Number.isNaN(rowIndex)) {
+      return;
+    }
+
+    const newValue = $cell.text().trim();
+    const updates = {};
+    updates[columnName] = newValue;
+    mergeRowData(rowIndex, updates);
+
+    const shouldRecalculateDomain =
+      columnName === "raw_public_emails" ||
+      (columnName === "email_domain" && newValue === "");
+
+    if (shouldRecalculateDomain) {
+      applyEmailDomainExtraction([rowIndex]);
+    }
+
+    storeResults();
+    renderResultsTable(stepResults);
   }
 
   function storeResults() {
@@ -469,6 +513,21 @@
   });
 
   $(document).ready(function () {
+    $("#guess-results-container").on(
+      "keydown",
+      "td[data-column]",
+      function (event) {
+        if (event.key === "Enter" || event.keyCode === 13) {
+          event.preventDefault();
+          $(this).blur();
+        }
+      }
+    );
+
+    $("#guess-results-container").on("blur", "td[data-column]", function () {
+      commitEditableCell($(this));
+    });
+
     const defaultStep2Instructions = `provide 3 publicly available email addresses for the company.
 
 ONLY list the emails in a list ['e1@co.com, 'e2@co.com', ...]
