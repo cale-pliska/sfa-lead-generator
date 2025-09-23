@@ -55,7 +55,6 @@
   let selectedColumns = [];
   let columnLabels = {};
   let hasDisplayedContacts = false;
-  let step2SourceResults = null;
   let step2SourceRows = [];
 
   function updateSourcePreview(messageOverride) {
@@ -73,25 +72,15 @@
   }
 
   function resetSourceData(messageOverride) {
-    step2SourceResults = null;
     step2SourceRows = [];
     updateSourcePreview(messageOverride || NO_SOURCE_DATA_MESSAGE);
   }
 
   function loadSourceData(forceReload) {
     const data = Contacts.getOrderedStep2Rows(forceReload);
-    step2SourceResults = data.results;
     step2SourceRows = data.rows;
     updateSourcePreview();
     return data;
-  }
-
-  function ensureSourceResults() {
-    if (step2SourceResults && typeof step2SourceResults === "object") {
-      return step2SourceResults;
-    }
-    const data = loadSourceData(true);
-    return data.results;
   }
 
   function resetContactsState(message) {
@@ -200,8 +189,22 @@
   }
 
   function createContacts() {
-    const sourceResults = ensureSourceResults();
-    parsedContacts = Contacts.buildContactRows(sourceResults);
+    let rows = Array.isArray(step2SourceRows) ? step2SourceRows : [];
+
+    if (!rows.length) {
+      const data = loadSourceData(true);
+      rows = Array.isArray(data.rows) ? data.rows : [];
+    }
+
+    if (!rows.length) {
+      alert(
+        "No source data available. Click Reload Data to load Step 2 results before generating contacts."
+      );
+      resetContactsState("No contacts available");
+      return;
+    }
+
+    parsedContacts = Contacts.buildContactRowsFromRows(rows);
     parsedContacts = Contacts.normalizeContacts(parsedContacts);
     Storage.storeContacts(parsedContacts);
     refreshContactsDisplay();

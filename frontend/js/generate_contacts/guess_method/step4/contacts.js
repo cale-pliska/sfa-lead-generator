@@ -105,63 +105,85 @@
     return { results: results, rows: rows };
   }
 
+  function appendContactsFromRow(row, contacts) {
+    if (!row || typeof row !== "object") {
+      return;
+    }
+
+    const baseData = ensureCanonicalFields(Shared.cloneRow(row));
+    const rawContacts = baseData.raw_contacts;
+    const contactEntries = Shared.ensureArray(Shared.parseRawContacts(rawContacts));
+
+    if (!contactEntries.length) {
+      const fallback = ensureCanonicalFields(Shared.cloneRow(baseData));
+      fallback.first_name = fallback.first_name || "";
+      fallback.last_name = fallback.last_name || "";
+      fallback.role = fallback.role || "";
+      fallback.contact_position = 1;
+      fallback.parse_status =
+        typeof rawContacts === "string" && rawContacts.trim() !== ""
+          ? rawContacts.trim()
+          : "No contacts parsed";
+      contacts.push(fallback);
+      return;
+    }
+
+    contactEntries.forEach(function (entry, position) {
+      const current = ensureCanonicalFields(Shared.cloneRow(baseData));
+      if (Array.isArray(entry)) {
+        current.first_name = entry[0] || "";
+        current.last_name = entry[1] || "";
+        current.role = entry[2] || "";
+        if (entry.length > 3) {
+          current.additional_contact_data = JSON.stringify(entry.slice(3));
+        }
+      } else if (entry && typeof entry === "object") {
+        current.first_name = entry.first_name || entry.firstname || "";
+        current.last_name = entry.last_name || entry.lastname || "";
+        current.role = entry.role || entry.title || "";
+        current.additional_contact_data = JSON.stringify(entry);
+      } else {
+        current.first_name = "";
+        current.last_name = "";
+        current.role = "";
+        current.additional_contact_data = JSON.stringify(entry);
+      }
+      current.contact_position = position + 1;
+      contacts.push(current);
+    });
+  }
+
   function buildContactRows(preloadedResults) {
     let results = preloadedResults;
+    const contacts = [];
+
+    if (Array.isArray(results)) {
+      results.forEach(function (row) {
+        appendContactsFromRow(row, contacts);
+      });
+      return normalizeContacts(contacts);
+    }
+
     if (!results || typeof results !== "object") {
       results = ensureStep2Results(true);
     }
+
     const indexes = Object.keys(results || {}).sort(function (a, b) {
       return parseInt(a, 10) - parseInt(b, 10);
     });
 
-    const contacts = [];
-
     indexes.forEach(function (idx) {
-      const row = results[idx] || {};
-      const baseData = ensureCanonicalFields(Shared.cloneRow(row));
-      const rawContacts = baseData.raw_contacts;
-      const contactEntries = Shared.ensureArray(Shared.parseRawContacts(rawContacts));
-
-      if (!contactEntries.length) {
-        const fallback = ensureCanonicalFields(Shared.cloneRow(baseData));
-        fallback.first_name = fallback.first_name || "";
-        fallback.last_name = fallback.last_name || "";
-        fallback.role = fallback.role || "";
-        fallback.contact_position = 1;
-        fallback.parse_status =
-          typeof rawContacts === "string" && rawContacts.trim() !== ""
-            ? rawContacts.trim()
-            : "No contacts parsed";
-        contacts.push(fallback);
-        return;
-      }
-
-      contactEntries.forEach(function (entry, position) {
-        const current = ensureCanonicalFields(Shared.cloneRow(baseData));
-        if (Array.isArray(entry)) {
-          current.first_name = entry[0] || "";
-          current.last_name = entry[1] || "";
-          current.role = entry[2] || "";
-          if (entry.length > 3) {
-            current.additional_contact_data = JSON.stringify(entry.slice(3));
-          }
-        } else if (entry && typeof entry === "object") {
-          current.first_name = entry.first_name || entry.firstname || "";
-          current.last_name = entry.last_name || entry.lastname || "";
-          current.role = entry.role || entry.title || "";
-          current.additional_contact_data = JSON.stringify(entry);
-        } else {
-          current.first_name = "";
-          current.last_name = "";
-          current.role = "";
-          current.additional_contact_data = JSON.stringify(entry);
-        }
-        current.contact_position = position + 1;
-        contacts.push(current);
-      });
+      appendContactsFromRow(results[idx] || {}, contacts);
     });
 
     return normalizeContacts(contacts);
+  }
+
+  function buildContactRowsFromRows(rows) {
+    if (!Array.isArray(rows)) {
+      return [];
+    }
+    return buildContactRows(rows);
   }
 
   window.guessStep4Contacts = {
@@ -171,5 +193,6 @@
     resolveDomainForEmail: resolveDomainForEmail,
     getOrderedStep2Rows: getOrderedStep2Rows,
     buildContactRows: buildContactRows,
+    buildContactRowsFromRows: buildContactRowsFromRows,
   };
 })(window);
