@@ -10,11 +10,63 @@
   const UI = window.guessStep4UI;
 
   const TABLE_CONTAINER = "#guess-step4-container";
+  const STALE_CONTACTS_MESSAGE =
+    "Step 2 results changed. Generate contacts again to view updates.";
+
+  function flushPendingStep2Edit() {
+    if (typeof window.guessStep2SaveInlineEdits === "function") {
+      try {
+        window.guessStep2SaveInlineEdits();
+      } catch (err) {
+        console.error("Unable to persist Step 2 edits before Step 4 action", err);
+      }
+    }
+
+    const activeElement = document.activeElement;
+    if (!activeElement) {
+      return Promise.resolve();
+    }
+
+    const $active = $(activeElement);
+    const isEditableCell =
+      $active.length &&
+      $active.is("td[data-column]") &&
+      $active.closest("#guess-results-container").length;
+
+    if (!isEditableCell) {
+      return Promise.resolve();
+    }
+
+    if (typeof activeElement.blur === "function") {
+      activeElement.blur();
+    }
+
+    return new Promise(function (resolve) {
+      setTimeout(resolve, 0);
+    });
+  }
 
   let parsedContacts = [];
   let availableColumns = [];
   let selectedColumns = [];
   let columnLabels = {};
+  let hasDisplayedContacts = false;
+
+  function resetContactsState(message) {
+    parsedContacts = [];
+    availableColumns = [];
+    selectedColumns = [];
+    columnLabels = {};
+    hasDisplayedContacts = false;
+    UI.showEmptyState(message || "No contacts available");
+    $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
+    $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
+  }
+
+  function invalidateContactsData(message) {
+    Storage.clearContacts();
+    resetContactsState(message || STALE_CONTACTS_MESSAGE);
+  }
 
   function ensureEmailColumnsSelected() {
     const requiredColumns = ["email", "email_pattern"];
@@ -94,12 +146,7 @@
 
   function refreshContactsDisplay() {
     if (!Array.isArray(parsedContacts) || !parsedContacts.length) {
-      availableColumns = [];
-      selectedColumns = [];
-      columnLabels = {};
-      $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
-      $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
-      UI.showEmptyState("No contacts available");
+      resetContactsState("No contacts available");
       return;
     }
 
@@ -107,6 +154,7 @@
     updateAvailableColumns(parsedContacts);
     UI.renderColumnControls(availableColumns, selectedColumns, columnLabels, handleColumnToggle);
     UI.renderContactsTable(TABLE_CONTAINER, parsedContacts, selectedColumns, columnLabels);
+    hasDisplayedContacts = true;
   }
 
   function createContacts() {
@@ -158,15 +206,9 @@
   }
 
   function clearStep4Results() {
-    parsedContacts = [];
-    availableColumns = [];
-    selectedColumns = [];
-    columnLabels = {};
     Storage.clearContacts();
     Storage.clearSelectedColumns();
-    UI.showEmptyState("No contacts available");
-    $(Constants.COLUMN_TOGGLE_CONTAINER).empty();
-    $(Constants.COLUMN_CONTROLS_WRAPPER).hide();
+    resetContactsState("No contacts available");
   }
 
   function loadStoredContacts() {
@@ -187,11 +229,29 @@
     if (results && typeof results === "object") {
       window.guessStep2Results = results;
     }
+
+    const hadContacts =
+      hasDisplayedContacts ||
+      (Array.isArray(parsedContacts) && parsedContacts.length > 0) ||
+      (Array.isArray(window.guessStep4ContactsData) &&
+        window.guessStep4ContactsData.length > 0);
+
+    if (hadContacts) {
+      invalidateContactsData();
+    }
   });
 
   $(function () {
-    $("#guess-create-contacts-btn").on("click", createContacts);
-    $(Constants.POPULATE_EMAILS_BUTTON).on("click", populateEmails);
+    $("#guess-create-contacts-btn").on("click", function () {
+      flushPendingStep2Edit().then(function () {
+        createContacts();
+      });
+    });
+    $(Constants.POPULATE_EMAILS_BUTTON).on("click", function () {
+      flushPendingStep2Edit().then(function () {
+        populateEmails();
+      });
+    });
     $("#guess-copy-step4-results").on("click", handleCopy);
     $(Constants.CLEAR_STEP4_BUTTON).on("click", clearStep4Results);
     loadStoredContacts();

@@ -3,6 +3,7 @@
   const SHARED_PROMPT_KEY = "generate_contacts_guess_shared_prompt";
   const STEP3_INSTRUCTIONS_KEY = "generate_contacts_guess_step3_instructions";
   const STEP3_RESULTS_KEY = "generate_contacts_guess_step3_results";
+  const STEP4_CONTACTS_KEY = "generate_contacts_guess_step4_contacts";
   const MODE_STORAGE_KEY = "generate_contacts_guess_process_mode";
   const LEGACY_PROMPT_KEYS = [
     "generate_contacts_guess_step2_prompt",
@@ -85,6 +86,14 @@
     } catch (err) {
       return String(value);
     }
+  }
+
+  function escapeAttributeValue(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
   function extractDomainsFromValue(value) {
@@ -204,7 +213,14 @@
       html += "<tr><td>" + idx + "</td>";
       columns.forEach(function (col) {
         const value = row[col];
-        html += "<td>" + formatValue(value) + "</td>";
+        html +=
+          '<td contenteditable="true" data-row="' +
+          escapeAttributeValue(idx) +
+          '" data-column="' +
+          escapeAttributeValue(col) +
+          '">' +
+          formatValue(value) +
+          "</td>";
       });
       html += "</tr>";
     });
@@ -212,10 +228,132 @@
     $("#guess-results-container").html(html);
   }
 
+  function commitEditableCell($cell) {
+    const columnName = $cell.attr("data-column");
+    const rowAttr = $cell.attr("data-row");
+    if (!columnName || typeof rowAttr === "undefined") {
+      return;
+    }
+
+    const rowIndex = parseInt(rowAttr, 10);
+    if (Number.isNaN(rowIndex)) {
+      return;
+    }
+
+    const newValue = $cell.text().trim();
+    const updates = {};
+    updates[columnName] = newValue;
+    mergeRowData(rowIndex, updates);
+
+    const shouldRecalculateDomain =
+      columnName === "raw_public_emails" ||
+      (columnName === "email_domain" && newValue === "");
+
+    if (shouldRecalculateDomain) {
+      applyEmailDomainExtraction([rowIndex]);
+    }
+
+    storeResults();
+    renderResultsTable(stepResults);
+  }
+
+  function saveAllEditableCells() {
+    const $cells = $("#guess-results-container td[data-column]");
+    if (!$cells.length) {
+      return false;
+    }
+
+    const pendingByRow = {};
+
+    $cells.each(function () {
+      const $cell = $(this);
+      const columnName = $cell.attr("data-column");
+      const rowAttr = $cell.attr("data-row");
+
+      if (!columnName || typeof rowAttr === "undefined") {
+        return;
+      }
+
+      const rowIndex = parseInt(rowAttr, 10);
+      if (Number.isNaN(rowIndex)) {
+        return;
+      }
+
+      const key = String(rowIndex);
+      if (!pendingByRow[key]) {
+        pendingByRow[key] = {};
+      }
+
+      pendingByRow[key][columnName] = $cell.text().trim();
+    });
+
+    const rowKeys = Object.keys(pendingByRow);
+    if (!rowKeys.length) {
+      return false;
+    }
+
+    let hasUpdates = false;
+    const domainIndexSet = new Set();
+
+    rowKeys.forEach(function (rowKey) {
+      const rowIndex = parseInt(rowKey, 10);
+      if (Number.isNaN(rowIndex)) {
+        return;
+      }
+
+      const rowUpdates = pendingByRow[rowKey];
+      const normalizedUpdates = {};
+      const previousRow = stepResults[rowKey] || {};
+
+      Object.keys(rowUpdates).forEach(function (columnName) {
+        const newValue = rowUpdates[columnName];
+        const previousValue =
+          typeof previousRow[columnName] !== "undefined"
+            ? formatValue(previousRow[columnName]).trim()
+            : "";
+
+        if (previousValue !== newValue) {
+          normalizedUpdates[columnName] = newValue;
+          if (
+            columnName === "raw_public_emails" ||
+            (columnName === "email_domain" && newValue === "")
+          ) {
+            domainIndexSet.add(rowIndex);
+          }
+        }
+      });
+
+      if (Object.keys(normalizedUpdates).length) {
+        mergeRowData(rowIndex, normalizedUpdates);
+        hasUpdates = true;
+      }
+    });
+
+    if (!hasUpdates && domainIndexSet.size === 0) {
+      return false;
+    }
+
+    const domainIndexes = Array.from(domainIndexSet);
+    const domainModified = domainIndexes.length
+      ? applyEmailDomainExtraction(domainIndexes)
+      : false;
+
+    if (hasUpdates && !domainModified) {
+      storeResults();
+    }
+
+    if (hasUpdates || domainModified) {
+      renderResultsTable(stepResults);
+    }
+
+    return hasUpdates || domainModified;
+  }
+
   function storeResults() {
     window.guessStep2Results = stepResults;
     localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
     localStorage.removeItem(STEP3_RESULTS_KEY);
+    localStorage.removeItem(STEP4_CONTACTS_KEY);
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   }
 
@@ -442,10 +580,15 @@
     applyEmailDomainExtraction(indexes);
   });
 
+  $("#guess-save-step2-edits").on("click", function () {
+    saveAllEditableCells();
+  });
+
   $("#guess-clear-step2").on("click", function () {
     stepResults = replaceStepResults({});
     localStorage.removeItem(RESULTS_KEY);
     localStorage.removeItem(STEP3_RESULTS_KEY);
+    localStorage.removeItem(STEP4_CONTACTS_KEY);
     $("#guess-results-container").html("No results");
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   });
@@ -469,6 +612,21 @@
   });
 
   $(document).ready(function () {
+    $("#guess-results-container").on(
+      "keydown",
+      "td[data-column]",
+      function (event) {
+        if (event.key === "Enter" || event.keyCode === 13) {
+          event.preventDefault();
+          $(this).blur();
+        }
+      }
+    );
+
+    $("#guess-results-container").on("blur", "td[data-column]", function () {
+      commitEditableCell($(this));
+    });
+
     const defaultStep2Instructions = `provide 3 publicly available email addresses for the company.
 
 ONLY list the emails in a list ['e1@co.com, 'e2@co.com', ...]
@@ -572,4 +730,6 @@ Example output:
       localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
     }
   });
+
+  window.guessStep2SaveInlineEdits = saveAllEditableCells;
 })();
