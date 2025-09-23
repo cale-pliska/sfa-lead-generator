@@ -1,5 +1,19 @@
 let selectedEmailColumn = null;
 
+const VALIDATION_RESULTS_COLUMN = "validation_results";
+const FINAL_RESULTS_DEFAULT_COLUMNS = [
+  "company",
+  "fname",
+  "lname",
+  "role",
+  "email",
+  "location",
+  "website",
+];
+
+let finalResultsSelectedColumns = new Set(FINAL_RESULTS_DEFAULT_COLUMNS);
+let latestValidateEmailsState = null;
+
 function updateEmailColumnControls(state) {
   const columns = state && Array.isArray(state.columns) ? state.columns : [];
   const hasData = state && Array.isArray(state.data) && state.data.length > 0;
@@ -87,8 +101,187 @@ function renderValidationSummary(summary) {
   $("#validation-summary").removeClass("hidden").html(html);
 }
 
+function resetFinalResultsSelection(state) {
+  const columns = state && Array.isArray(state.columns) ? state.columns : [];
+  const defaults = FINAL_RESULTS_DEFAULT_COLUMNS.filter((column) =>
+    columns.includes(column)
+  );
+
+  if (defaults.length) {
+    finalResultsSelectedColumns = new Set(defaults);
+  } else if (columns.length) {
+    finalResultsSelectedColumns = new Set(columns);
+  } else {
+    finalResultsSelectedColumns = new Set(FINAL_RESULTS_DEFAULT_COLUMNS);
+  }
+}
+
+function synchronizeFinalResultsSelection(columns) {
+  const availableSet = new Set(columns);
+  const preserved = [];
+
+  finalResultsSelectedColumns.forEach((column) => {
+    if (availableSet.has(column)) {
+      preserved.push(column);
+    }
+  });
+
+  if (!preserved.length) {
+    const defaults = FINAL_RESULTS_DEFAULT_COLUMNS.filter((column) =>
+      availableSet.has(column)
+    );
+    if (defaults.length) {
+      preserved.push(...defaults);
+    } else {
+      preserved.push(...columns);
+    }
+  }
+
+  finalResultsSelectedColumns = new Set(preserved);
+}
+
+function buildFinalResultsColumnControls(columns) {
+  const $container = $("#final-results-columns");
+  $container.empty();
+
+  columns.forEach((column) => {
+    const safeId = `final-results-column-${column
+      .toString()
+      .replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+    const isChecked = finalResultsSelectedColumns.has(column);
+    const $checkbox = $("<input type=\"checkbox\" />")
+      .attr("id", safeId)
+      .attr("value", column)
+      .prop("checked", isChecked)
+      .on("change", function () {
+        if ($(this).is(":checked")) {
+          if (!finalResultsSelectedColumns.has(column)) {
+            finalResultsSelectedColumns.add(column);
+          }
+        } else {
+          finalResultsSelectedColumns.delete(column);
+        }
+        renderFinalResultsTable(latestValidateEmailsState);
+      });
+
+    const $label = $("<label class=\"final-results-column-toggle\"></label>")
+      .attr("for", safeId)
+      .append($checkbox)
+      .append(document.createTextNode(` ${column}`));
+
+    $container.append($label);
+  });
+}
+
+function formatFinalResultsValue(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
+function isRowVerified(row) {
+  if (!row || typeof row !== "object") {
+    return false;
+  }
+
+  if (row._validation_valid === true) {
+    return true;
+  }
+  if (row._validation_valid === false) {
+    return false;
+  }
+
+  const summary = row[VALIDATION_RESULTS_COLUMN];
+  if (typeof summary === "string" && summary.includes("Validity: Valid")) {
+    return true;
+  }
+
+  return false;
+}
+
+function renderFinalResultsTable(state) {
+  const $tableContainer = $("#final-results-table");
+  if (!$tableContainer.length) {
+    return;
+  }
+
+  const selectedColumns = Array.from(finalResultsSelectedColumns);
+  if (!selectedColumns.length) {
+    $tableContainer.html("<p>Select at least one column to display.</p>");
+    return;
+  }
+
+  const rows = state && Array.isArray(state.data) ? state.data : [];
+  const verifiedRows = rows.filter((row) => isRowVerified(row));
+
+  if (!verifiedRows.length) {
+    $tableContainer.html("<p>No verified emails available yet.</p>");
+    return;
+  }
+
+  let html = "<table><thead><tr>";
+  selectedColumns.forEach((column) => {
+    html += `<th>${column}</th>`;
+  });
+  html += "</tr></thead><tbody>";
+
+  verifiedRows.forEach((row) => {
+    html += "<tr>";
+    selectedColumns.forEach((column) => {
+      const cellValue = formatFinalResultsValue(row[column]);
+      html += `<td>${cellValue}</td>`;
+    });
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  $tableContainer.html(html);
+}
+
+function updateFinalResultsSection(state) {
+  const $section = $("#final-results");
+  const $columnsContainer = $("#final-results-columns");
+  const $tableContainer = $("#final-results-table");
+
+  if (!$section.length || !$columnsContainer.length || !$tableContainer.length) {
+    return;
+  }
+
+  latestValidateEmailsState = state || {};
+  const columns =
+    state && Array.isArray(state.columns) ? state.columns.slice() : [];
+  const rows = state && Array.isArray(state.data) ? state.data : [];
+
+  if (!columns.length || !rows.length) {
+    $section.addClass("hidden");
+    $columnsContainer.empty();
+    $tableContainer.empty();
+    return;
+  }
+
+  $section.removeClass("hidden");
+  synchronizeFinalResultsSelection(columns);
+  buildFinalResultsColumnControls(columns);
+  renderFinalResultsTable(state);
+}
+
 $(document).on("validateEmails:dataLoaded", function (_event, state) {
-  updateEmailColumnControls(state || {});
+  const safeState = state || {};
+  updateEmailColumnControls(safeState);
+  resetFinalResultsSelection(safeState);
+  updateFinalResultsSection(safeState);
+});
+
+$(document).on("validateEmails:dataUpdated", function (_event, state) {
+  updateFinalResultsSection(state || {});
 });
 
 $("#email-column").on("change", function () {

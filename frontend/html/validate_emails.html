@@ -28,6 +28,31 @@
         .processing-row td {
             background-color: #fff3cd;
         }
+        #final-results {
+            margin-top: 1.5em;
+            padding: 0.75em 1em;
+            background-color: #f8f9fa;
+            border: 1px solid #dfe1e5;
+            border-radius: 0.5em;
+        }
+        #final-results h3 {
+            margin-top: 0;
+        }
+        #final-results-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em 1em;
+            margin-bottom: 0.75em;
+        }
+        .final-results-column-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35em;
+            font-size: 0.95em;
+        }
+        #final-results-table table {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -37,8 +62,8 @@
      <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
      <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
      <a href="{{ url_for('prioritize_businesses.prioritize_businesses') }}">Prioritize Businesses</a> |
-     <a href="{{ url_for('validate_emails.page') }}">Validate Emails</a> |
-     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a> |
+     <a href="{{ url_for('validate_emails.page') }}">Validate Emails</a>
  </nav>
 
 <div id="step1">
@@ -63,6 +88,12 @@
     <button type="button" id="validate-emails-btn" disabled>Validate Emails</button>
     <div id="validation-status" style="margin-top:1em;"></div>
     <div id="validation-summary" class="hidden"></div>
+    <div id="final-results" class="hidden">
+        <h3>Final Email Results</h3>
+        <p><strong>Columns to include:</strong></p>
+        <div id="final-results-columns"></div>
+        <div id="final-results-table" class="scrollable-output"></div>
+    </div>
 </div>
 
 <script src="{{ url_for('static', filename='validate_emails/step1.js') }}"></script>

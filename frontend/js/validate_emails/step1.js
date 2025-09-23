@@ -5,6 +5,12 @@ const VALIDATE_EMAILS_STORAGE_KEYS = {
 const VALIDATION_RESULTS_COLUMN = "validation_results";
 const VALIDATION_PROCESSING_LABEL = "Processing…";
 
+const HIDDEN_METADATA_PREFIX = "_";
+
+function isHiddenMetadataKey(key) {
+  return typeof key === "string" && key.startsWith(HIDDEN_METADATA_PREFIX);
+}
+
 const validateEmailsState = {
   data: [],
   columns: [],
@@ -23,6 +29,9 @@ function ensureColumnsFromRow(row) {
   }
 
   Object.keys(row).forEach((key) => {
+    if (isHiddenMetadataKey(key)) {
+      return;
+    }
     if (!validateEmailsState.columns.includes(key)) {
       validateEmailsState.columns.push(key);
     }
@@ -76,9 +85,12 @@ function handleValidateEmailsDataLoaded(data, options = {}) {
 
   if (!shouldMerge) {
     validateEmailsState.data = Array.isArray(data) ? data : [];
-    validateEmailsState.columns = validateEmailsState.data.length
+    const initialColumns = validateEmailsState.data.length
       ? Object.keys(validateEmailsState.data[0])
       : [];
+    validateEmailsState.columns = initialColumns.filter(
+      (column) => !isHiddenMetadataKey(column)
+    );
     validateEmailsState.processing = new Set();
     validateEmailsState.data.forEach((row) => {
       ensureColumnsFromRow(row);
@@ -115,6 +127,7 @@ function handleValidateEmailsDataLoaded(data, options = {}) {
   if (!shouldMerge) {
     $(document).trigger("validateEmails:dataLoaded", [validateEmailsState]);
   }
+  $(document).trigger("validateEmails:dataUpdated", [validateEmailsState]);
 }
 
 function setValidationProcessingState(start, stop, isProcessing) {

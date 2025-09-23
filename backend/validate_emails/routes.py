@@ -97,9 +97,39 @@ def _prepare_records_for_response(records: list[dict[str, Any]]) -> list[dict[st
     for record in records:
         if not isinstance(record, dict):
             continue
-        record[RESULTS_COLUMN] = _prepare_validation_cell(
-            record.get(RESULTS_COLUMN)
-        )
+        raw_value = record.get(RESULTS_COLUMN)
+
+        parsed_result: dict[str, Any] | None = None
+        if isinstance(raw_value, dict):
+            parsed_result = raw_value
+        elif isinstance(raw_value, str):
+            stripped = raw_value.strip()
+            if stripped:
+                try:
+                    candidate = json.loads(stripped)
+                except (TypeError, ValueError):
+                    parsed_result = None
+                else:
+                    if isinstance(candidate, dict):
+                        parsed_result = candidate
+
+        is_valid = False
+        if isinstance(parsed_result, dict):
+            valid_value = parsed_result.get("Valid")
+            if valid_value is True:
+                is_valid = True
+            elif isinstance(valid_value, str) and valid_value.lower() in {
+                "true",
+                "valid",
+                "yes",
+            }:
+                is_valid = True
+            elif isinstance(valid_value, (int, float)) and valid_value == 1:
+                is_valid = True
+
+        record[RESULTS_COLUMN] = _prepare_validation_cell(raw_value)
+        record["_validation_result"] = parsed_result
+        record["_validation_valid"] = is_valid
     return records
 
 
