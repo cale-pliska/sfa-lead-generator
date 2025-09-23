@@ -349,6 +349,115 @@
     return hasUpdates || domainModified;
   }
 
+  function collectStep2TableRows() {
+    const results = {};
+    const domainTargets = new Set();
+    const $rows = $("#guess-results-container table tbody tr");
+    let hasRows = false;
+
+    if (!$rows.length) {
+      return { results, domainTargets, hasRows: false };
+    }
+
+    $rows.each(function () {
+      const $row = $(this);
+      const $firstCell = $row.find("td[data-row]").first();
+      const rowAttr = $firstCell.attr("data-row");
+
+      if (typeof rowAttr === "undefined") {
+        return;
+      }
+
+      const key = String(rowAttr);
+      const existingRow = stepResults[key] || {};
+      const previousRow = existingRow ? { ...existingRow } : {};
+      const rowIndex = parseInt(rowAttr, 10);
+      let shouldUpdateDomain = false;
+
+      hasRows = true;
+
+      if (!Number.isNaN(rowIndex)) {
+        previousRow.index = rowIndex;
+      } else if (typeof previousRow.index === "undefined") {
+        previousRow.index = rowAttr;
+      }
+
+      $row.find("td[data-column]").each(function () {
+        const $cell = $(this);
+        const columnName = $cell.attr("data-column");
+
+        if (!columnName) {
+          return;
+        }
+
+        const cellValue = $cell.text().trim();
+
+        if (columnName === "raw_public_emails") {
+          const previousValue = existingRow[columnName];
+          const normalizedPrevious =
+            typeof previousValue !== "undefined"
+              ? formatValue(previousValue).trim()
+              : "";
+          if (normalizedPrevious !== cellValue) {
+            shouldUpdateDomain = true;
+          }
+        }
+
+        if (columnName === "email_domain" && cellValue === "") {
+          shouldUpdateDomain = true;
+        }
+
+        previousRow[columnName] = cellValue;
+      });
+
+      if (shouldUpdateDomain) {
+        domainTargets.add(key);
+      }
+
+      results[key] = previousRow;
+    });
+
+    return { results, domainTargets, hasRows };
+  }
+
+  function persistInlineEditsFromDom() {
+    return Promise.resolve()
+      .then(function () {
+        const collected = collectStep2TableRows();
+
+        if (!collected.hasRows) {
+          storeResults();
+          return stepResults;
+        }
+
+        const resultsMap = collected.results;
+
+        stepResults = replaceStepResults(resultsMap);
+
+        let domainsUpdated = false;
+
+        if (collected.domainTargets.size) {
+          try {
+            domainsUpdated = applyEmailDomainExtraction(
+              Array.from(collected.domainTargets)
+            );
+          } catch (err) {
+            console.error("Unable to recalculate email domains for Step 2 edits", err);
+          }
+        }
+
+        if (!domainsUpdated) {
+          storeResults();
+        }
+
+        return stepResults;
+      })
+      .catch(function (err) {
+        console.error("Unable to persist inline Step 2 edits", err);
+        return stepResults;
+      });
+  }
+
   function storeResults() {
     window.guessStep2Results = stepResults;
     localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
@@ -581,7 +690,7 @@
   });
 
   $("#guess-save-step2-edits").on("click", function () {
-    saveAllEditableCells();
+    persistInlineEditsFromDom();
   });
 
   $("#guess-clear-step2").on("click", function () {
@@ -731,5 +840,5 @@ Example output:
     }
   });
 
-  window.guessStep2SaveInlineEdits = saveAllEditableCells;
+  window.guessStep2SaveInlineEdits = persistInlineEditsFromDom;
 })();

@@ -14,35 +14,54 @@
     "Step 2 results changed. Generate contacts again to view updates.";
 
   function flushPendingStep2Edit() {
-    if (typeof window.guessStep2SaveInlineEdits === "function") {
-      try {
-        window.guessStep2SaveInlineEdits();
-      } catch (err) {
-        console.error("Unable to persist Step 2 edits before Step 4 action", err);
-      }
-    }
-
     const activeElement = document.activeElement;
-    if (!activeElement) {
-      return Promise.resolve();
-    }
+    const $activeCell = activeElement
+      ? $(activeElement).closest("td[data-column]")
+      : $();
 
-    const $active = $(activeElement);
     const isEditableCell =
-      $active.length &&
-      $active.is("td[data-column]") &&
-      $active.closest("#guess-results-container").length;
+      $activeCell.length &&
+      $activeCell.closest("#guess-results-container, #guess-step3-container").length > 0;
 
-    if (!isEditableCell) {
-      return Promise.resolve();
-    }
+    const blurPromise = isEditableCell
+      ? new Promise(function (resolve) {
+          const cellElement = $activeCell.get(0) || activeElement;
+          if (cellElement && typeof cellElement.blur === "function") {
+            try {
+              cellElement.blur();
+            } catch (err) {
+              console.error(
+                "Unable to blur active Step 2 cell before Step 4 action",
+                err
+              );
+            }
+          } else if (activeElement && typeof activeElement.blur === "function") {
+            try {
+              activeElement.blur();
+            } catch (err) {
+              console.error(
+                "Unable to blur active Step 2 cell before Step 4 action",
+                err
+              );
+            }
+          }
 
-    if (typeof activeElement.blur === "function") {
-      activeElement.blur();
-    }
+          setTimeout(resolve, 0);
+        })
+      : Promise.resolve();
 
-    return new Promise(function (resolve) {
-      setTimeout(resolve, 0);
+    return blurPromise.then(function () {
+      if (typeof window.guessStep2SaveInlineEdits === "function") {
+        return Promise.resolve()
+          .then(function () {
+            return window.guessStep2SaveInlineEdits();
+          })
+          .catch(function (err) {
+            console.error("Unable to persist Step 2 edits before Step 4 action", err);
+          });
+      }
+
+      return undefined;
     });
   }
 
