@@ -171,17 +171,17 @@
      <a href="{{ url_for('parse_locations.parse_locations') }}">Parse Locations</a> |
      <a href="{{ url_for('find_businesses.find_businesses') }}">Find Businesses</a> |
      <a href="{{ url_for('prioritize_businesses.prioritize_businesses') }}">Prioritize Businesses</a> |
-     <a href="{{ url_for('validate_emails.page') }}">Validate Emails</a> |
-     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a>
+     <a href="{{ url_for('step1.generate_contacts') }}">Generate Contacts</a> |
+     <a href="{{ url_for('validate_emails.page') }}">Validate Emails</a>
  </nav>
 
 <div class="method-toggle">
-    <button type="button" class="method-tab active" data-target="simple-method">Simple Method</button>
-    <button type="button" class="method-tab" data-target="guess-method">Guess Method</button>
+    <button type="button" class="method-tab" data-target="simple-method">Simple Method</button>
+    <button type="button" class="method-tab active" data-target="guess-method">Guess Method</button>
 </div>
 
 <div class="method-content">
-    <section id="simple-method" class="method-section active" aria-hidden="false">
+    <section id="simple-method" class="method-section" aria-hidden="true">
         <div id="step1">
             <h2>STEP 1: Initial Data Load</h2>
             <form id="upload-form" method="post" enctype="multipart/form-data">
@@ -225,7 +225,7 @@
         </div>
     </section>
 
-    <section id="guess-method" class="method-section" aria-hidden="true">
+    <section id="guess-method" class="method-section active" aria-hidden="false">
         <div id="guess-step1">
             <h2>STEP 1: Initial Data Load</h2>
             <form id="guess-upload-form" method="post" enctype="multipart/form-data">
