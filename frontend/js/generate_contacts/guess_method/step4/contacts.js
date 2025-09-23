@@ -4,22 +4,35 @@
   const Shared = window.guessStep4Shared;
   const Constants = window.guessStep4Constants;
 
-  function ensureStep2Results() {
-    if (window.guessStep2Results && typeof window.guessStep2Results === "object") {
+  function readStoredStep2Results() {
+    let saved = null;
+    try {
+      saved = localStorage.getItem(Constants.STEP2_RESULTS_KEY);
+    } catch (err) {
+      console.error("Unable to access stored Step 2 results", err);
+      return {};
+    }
+
+    if (!saved) {
+      return {};
+    }
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      console.error("Unable to parse stored Step 2 results", err);
+      return {};
+    }
+  }
+
+  function ensureStep2Results(forceReload) {
+    const shouldReload = Boolean(forceReload);
+    if (!shouldReload && window.guessStep2Results && typeof window.guessStep2Results === "object") {
       return window.guessStep2Results;
     }
 
-    const saved = localStorage.getItem(Constants.STEP2_RESULTS_KEY);
-    if (saved) {
-      try {
-        window.guessStep2Results = JSON.parse(saved);
-        return window.guessStep2Results;
-      } catch (err) {
-        console.error("Unable to parse stored Step 2 results", err);
-      }
-    }
-
-    window.guessStep2Results = {};
+    window.guessStep2Results = readStoredStep2Results();
     return window.guessStep2Results;
   }
 
@@ -75,7 +88,7 @@
   }
 
   function buildContactRows() {
-    const results = ensureStep2Results();
+    const results = ensureStep2Results(true);
     const indexes = Object.keys(results).sort(function (a, b) {
       return parseInt(a, 10) - parseInt(b, 10);
     });
