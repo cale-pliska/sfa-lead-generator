@@ -4,6 +4,23 @@
   const Shared = window.guessStep4Shared;
   const Constants = window.guessStep4Constants;
 
+  function formatSourceValue(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    if (typeof value === "string") {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+
   function fallbackCopy(text) {
     const temp = $("<textarea>");
     $("body").append(temp);
@@ -39,6 +56,83 @@
     } else {
       fallbackCopy(tsv);
     }
+  }
+
+  function renderSourcePreview(containerSelector, rows, emptyMessage) {
+    const container = $(containerSelector);
+    if (!container.length) {
+      return;
+    }
+
+    if (!Array.isArray(rows) || !rows.length) {
+      container.html(
+        '<div class="guess-step4-empty">' +
+          (emptyMessage || "No source data loaded.") +
+          "</div>"
+      );
+      return;
+    }
+
+    const columnSet = new Set();
+    rows.forEach(function (row) {
+      if (row && typeof row === "object") {
+        Object.keys(row).forEach(function (key) {
+          columnSet.add(key);
+        });
+      }
+    });
+
+    const preferred = [
+      "index",
+      "business_name",
+      "raw_public_emails",
+      "email_domain",
+      "raw_contacts",
+    ];
+
+    const columns = [];
+    preferred.forEach(function (key) {
+      if (columnSet.has(key)) {
+        columns.push(key);
+        columnSet.delete(key);
+      }
+    });
+
+    Array.from(columnSet)
+      .sort(function (a, b) {
+        return String(a).localeCompare(String(b));
+      })
+      .forEach(function (key) {
+        columns.push(key);
+      });
+
+    if (!columns.length) {
+      container.html(
+        '<div class="guess-step4-empty">' +
+          (emptyMessage || "No source data loaded.") +
+          "</div>"
+      );
+      return;
+    }
+
+    let html =
+      '<table id="guess-step4-source-table"><thead><tr>';
+    columns.forEach(function (column) {
+      html +=
+        "<th>" + (Shared.formatColumnLabel(column) || column) + "</th>";
+    });
+    html += "</tr></thead><tbody>";
+
+    rows.forEach(function (row) {
+      html += "<tr>";
+      columns.forEach(function (column) {
+        html += "<td>" + formatSourceValue(row[column]) + "</td>";
+      });
+      html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+    container.html(html);
   }
 
   function renderContactsTable(containerSelector, rows, selectedColumns, columnLabels) {
@@ -111,6 +205,7 @@
 
   window.guessStep4UI = {
     copyTableToClipboard: copyTableToClipboard,
+    renderSourcePreview: renderSourcePreview,
     renderContactsTable: renderContactsTable,
     renderColumnControls: renderColumnControls,
     showEmptyState: showEmptyState,

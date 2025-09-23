@@ -12,6 +12,10 @@
   const TABLE_CONTAINER = "#guess-step4-container";
   const STALE_CONTACTS_MESSAGE =
     "Step 2 results changed. Generate contacts again to view updates.";
+  const STALE_SOURCE_MESSAGE =
+    "Step 2 results changed. Reload data to view updates.";
+  const NO_SOURCE_DATA_MESSAGE =
+    "No source data loaded. Click Reload Data to view Step 2 results.";
 
   function flushPendingStep2Edit() {
     if (typeof window.guessStep2SaveInlineEdits === "function") {
@@ -51,6 +55,44 @@
   let selectedColumns = [];
   let columnLabels = {};
   let hasDisplayedContacts = false;
+  let step2SourceResults = null;
+  let step2SourceRows = [];
+
+  function updateSourcePreview(messageOverride) {
+    let message = NO_SOURCE_DATA_MESSAGE;
+    if (typeof messageOverride === "string") {
+      message = messageOverride;
+    } else if (step2SourceRows.length > 0) {
+      message = null;
+    }
+    UI.renderSourcePreview(
+      Constants.SOURCE_CONTAINER,
+      step2SourceRows,
+      message
+    );
+  }
+
+  function resetSourceData(messageOverride) {
+    step2SourceResults = null;
+    step2SourceRows = [];
+    updateSourcePreview(messageOverride || NO_SOURCE_DATA_MESSAGE);
+  }
+
+  function loadSourceData(forceReload) {
+    const data = Contacts.getOrderedStep2Rows(forceReload);
+    step2SourceResults = data.results;
+    step2SourceRows = data.rows;
+    updateSourcePreview();
+    return data;
+  }
+
+  function ensureSourceResults() {
+    if (step2SourceResults && typeof step2SourceResults === "object") {
+      return step2SourceResults;
+    }
+    const data = loadSourceData(true);
+    return data.results;
+  }
 
   function resetContactsState(message) {
     parsedContacts = [];
@@ -158,7 +200,8 @@
   }
 
   function createContacts() {
-    parsedContacts = Contacts.buildContactRows();
+    const sourceResults = ensureSourceResults();
+    parsedContacts = Contacts.buildContactRows(sourceResults);
     parsedContacts = Contacts.normalizeContacts(parsedContacts);
     Storage.storeContacts(parsedContacts);
     refreshContactsDisplay();
@@ -238,10 +281,17 @@
 
     if (hadContacts) {
       invalidateContactsData();
+      resetSourceData(STALE_SOURCE_MESSAGE);
     }
   });
 
   $(function () {
+    resetSourceData();
+    $(Constants.RELOAD_SOURCE_BUTTON).on("click", function () {
+      flushPendingStep2Edit().then(function () {
+        loadSourceData(true);
+      });
+    });
     $("#guess-create-contacts-btn").on("click", function () {
       flushPendingStep2Edit().then(function () {
         createContacts();

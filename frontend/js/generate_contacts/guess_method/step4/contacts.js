@@ -87,9 +87,30 @@
     return "";
   }
 
-  function buildContactRows() {
-    const results = ensureStep2Results(true);
-    const indexes = Object.keys(results).sort(function (a, b) {
+  function getOrderedStep2Rows(forceReload) {
+    const results = ensureStep2Results(forceReload);
+    const indexes = Object.keys(results || {}).sort(function (a, b) {
+      return parseInt(a, 10) - parseInt(b, 10);
+    });
+
+    const rows = indexes.map(function (idx) {
+      const original = results[idx] || {};
+      const clone = Shared.cloneRow(original);
+      if (typeof clone.index === "undefined") {
+        clone.index = parseInt(idx, 10);
+      }
+      return ensureCanonicalFields(clone);
+    });
+
+    return { results: results, rows: rows };
+  }
+
+  function buildContactRows(preloadedResults) {
+    let results = preloadedResults;
+    if (!results || typeof results !== "object") {
+      results = ensureStep2Results(true);
+    }
+    const indexes = Object.keys(results || {}).sort(function (a, b) {
       return parseInt(a, 10) - parseInt(b, 10);
     });
 
@@ -148,6 +169,7 @@
     ensureCanonicalFields: ensureCanonicalFields,
     normalizeContacts: normalizeContacts,
     resolveDomainForEmail: resolveDomainForEmail,
+    getOrderedStep2Rows: getOrderedStep2Rows,
     buildContactRows: buildContactRows,
   };
 })(window);
