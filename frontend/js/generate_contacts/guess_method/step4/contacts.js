@@ -27,12 +27,31 @@
   }
 
   function ensureStep2Results(forceReload) {
-    const shouldReload = Boolean(forceReload);
-    if (!shouldReload && window.guessStep2Results && typeof window.guessStep2Results === "object") {
+    const hasExistingResults =
+      window.guessStep2Results && typeof window.guessStep2Results === "object";
+    if (!forceReload && hasExistingResults) {
       return window.guessStep2Results;
     }
 
-    window.guessStep2Results = readStoredStep2Results();
+    const storedResults = readStoredStep2Results();
+    const hasStoredResults =
+      storedResults && typeof storedResults === "object" && Object.keys(storedResults).length > 0;
+
+    if (hasStoredResults) {
+      window.guessStep2Results = storedResults;
+      return window.guessStep2Results;
+    }
+
+    if (hasExistingResults) {
+      if (forceReload) {
+        console.warn(
+          "Stored Step 2 results were empty; retaining in-memory results instead.",
+        );
+      }
+      return window.guessStep2Results;
+    }
+
+    window.guessStep2Results = storedResults && typeof storedResults === "object" ? storedResults : {};
     return window.guessStep2Results;
   }
 

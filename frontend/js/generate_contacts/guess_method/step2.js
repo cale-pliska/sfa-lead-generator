@@ -351,9 +351,13 @@
 
   function storeResults() {
     window.guessStep2Results = stepResults;
-    localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
-    localStorage.removeItem(STEP3_RESULTS_KEY);
-    localStorage.removeItem(STEP4_CONTACTS_KEY);
+    try {
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(stepResults));
+      localStorage.removeItem(STEP3_RESULTS_KEY);
+      localStorage.removeItem(STEP4_CONTACTS_KEY);
+    } catch (err) {
+      console.error("Unable to persist Step 2 results", err);
+    }
     $(document).trigger("guessStep2ResultsUpdated", [stepResults]);
   }
 
