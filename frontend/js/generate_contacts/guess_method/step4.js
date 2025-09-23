@@ -14,6 +14,14 @@
     "Step 2 results changed. Generate contacts again to view updates.";
 
   function flushPendingStep2Edit() {
+    if (typeof window.guessStep2SaveInlineEdits === "function") {
+      try {
+        window.guessStep2SaveInlineEdits();
+      } catch (err) {
+        console.error("Unable to persist Step 2 edits before Step 4 action", err);
+      }
+    }
+
     const activeElement = document.activeElement;
     if (!activeElement) {
       return Promise.resolve();
