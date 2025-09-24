@@ -1,5 +1,9 @@
 const VALIDATE_EMAILS_STORAGE_KEYS = {
   tsv: "validate_emails_step1_tsv",
+  dataset: "validate_emails_step1_dataset",
+  summary: "validate_emails_step2_summary",
+  status: "validate_emails_step2_status",
+  selectedColumn: "validate_emails_step2_selected_column",
 };
 
 const VALIDATION_RESULTS_COLUMN = "validation_results";
@@ -83,6 +87,9 @@ function handleValidateEmailsDataLoaded(data, options = {}) {
     validateEmailsState.data.forEach((row) => {
       ensureColumnsFromRow(row);
     });
+    localStorage.removeItem(VALIDATE_EMAILS_STORAGE_KEYS.summary);
+    localStorage.removeItem(VALIDATE_EMAILS_STORAGE_KEYS.status);
+    localStorage.removeItem(VALIDATE_EMAILS_STORAGE_KEYS.selectedColumn);
   } else if (
     Array.isArray(data) &&
     Array.isArray(validateEmailsState.data) &&
@@ -111,6 +118,20 @@ function handleValidateEmailsDataLoaded(data, options = {}) {
 
   ensureValidationResultsColumn();
   renderValidateEmailsTable(validateEmailsState.data);
+
+  if (validateEmailsState.data.length) {
+    try {
+      const payload = JSON.stringify({
+        data: validateEmailsState.data,
+        columns: validateEmailsState.columns,
+      });
+      localStorage.setItem(VALIDATE_EMAILS_STORAGE_KEYS.dataset, payload);
+    } catch (err) {
+      console.error("Failed to persist validate emails dataset", err);
+    }
+  } else {
+    localStorage.removeItem(VALIDATE_EMAILS_STORAGE_KEYS.dataset);
+  }
 
   if (!shouldMerge) {
     $(document).trigger("validateEmails:dataLoaded", [validateEmailsState]);
@@ -169,7 +190,8 @@ function saveStep1State() {
   );
 }
 
-function autoPopulateFromSaved() {
+function autoPopulateFromSaved(options = {}) {
+  const skipUpload = Boolean(options && options.skipUpload);
   const savedTsv =
     localStorage.getItem(VALIDATE_EMAILS_STORAGE_KEYS.tsv) || "";
   if (!savedTsv) {
@@ -177,6 +199,10 @@ function autoPopulateFromSaved() {
   }
 
   $("#tsv-input").val(savedTsv);
+
+  if (skipUpload) {
+    return;
+  }
 
   const formData = new FormData();
   formData.append("tsv_text", savedTsv);
@@ -198,7 +224,39 @@ function autoPopulateFromSaved() {
 }
 
 $(document).ready(function () {
-  autoPopulateFromSaved();
+  const savedDatasetRaw =
+    localStorage.getItem(VALIDATE_EMAILS_STORAGE_KEYS.dataset);
+  let shouldSkipUpload = false;
+
+  if (savedDatasetRaw) {
+    try {
+      const parsed = JSON.parse(savedDatasetRaw);
+      const savedData = Array.isArray(parsed.data) ? parsed.data : [];
+      const savedColumns = Array.isArray(parsed.columns)
+        ? parsed.columns
+        : [];
+
+      if (savedData.length) {
+        validateEmailsState.data = savedData;
+        validateEmailsState.columns = savedColumns;
+        validateEmailsState.processing = new Set();
+        savedData.forEach((row) => {
+          ensureColumnsFromRow(row);
+        });
+        ensureValidationResultsColumn();
+        renderValidateEmailsTable(validateEmailsState.data);
+        shouldSkipUpload = true;
+        $(document).trigger("validateEmails:dataLoaded", [
+          validateEmailsState,
+        ]);
+      }
+    } catch (err) {
+      console.error("Failed to parse saved validate emails dataset", err);
+      localStorage.removeItem(VALIDATE_EMAILS_STORAGE_KEYS.dataset);
+    }
+  }
+
+  autoPopulateFromSaved({ skipUpload: shouldSkipUpload });
 
   $("#tsv-input").on("input", function () {
     saveStep1State();
@@ -238,3 +296,4 @@ window.validateEmailsState = validateEmailsState;
 window.handleValidateEmailsDataLoaded = handleValidateEmailsDataLoaded;
 window.renderValidateEmailsTable = renderValidateEmailsTable;
 window.setValidationProcessingState = setValidationProcessingState;
+window.VALIDATE_EMAILS_STORAGE_KEYS = VALIDATE_EMAILS_STORAGE_KEYS;

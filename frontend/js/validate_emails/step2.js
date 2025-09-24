@@ -1,4 +1,69 @@
-let selectedEmailColumn = null;
+const STORAGE_KEYS =
+  (typeof window !== "undefined" && window.VALIDATE_EMAILS_STORAGE_KEYS) || {
+    tsv: "validate_emails_step1_tsv",
+    dataset: "validate_emails_step1_dataset",
+    summary: "validate_emails_step2_summary",
+    status: "validate_emails_step2_status",
+    selectedColumn: "validate_emails_step2_selected_column",
+  };
+
+function getStoredSelectedColumn() {
+  const value = localStorage.getItem(STORAGE_KEYS.selectedColumn);
+  return typeof value === "string" && value.length ? value : null;
+}
+
+function storeSelectedColumn(column) {
+  if (column) {
+    localStorage.setItem(STORAGE_KEYS.selectedColumn, column);
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.selectedColumn);
+  }
+}
+
+function saveValidationSummary(summary) {
+  if (!summary) {
+    localStorage.removeItem(STORAGE_KEYS.summary);
+    return;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.summary, JSON.stringify(summary));
+  } catch (err) {
+    console.error("Failed to persist validation summary", err);
+  }
+}
+
+function loadValidationSummary() {
+  const raw = localStorage.getItem(STORAGE_KEYS.summary);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error("Failed to parse saved validation summary", err);
+    localStorage.removeItem(STORAGE_KEYS.summary);
+    return null;
+  }
+}
+
+function setValidationStatus(message) {
+  const $status = $("#validation-status");
+  if (message) {
+    $status.text(message);
+    localStorage.setItem(STORAGE_KEYS.status, message);
+  } else {
+    $status.empty();
+    localStorage.removeItem(STORAGE_KEYS.status);
+  }
+}
+
+function loadValidationStatus() {
+  return localStorage.getItem(STORAGE_KEYS.status) || "";
+}
+
+let selectedEmailColumn = getStoredSelectedColumn();
 
 function updateEmailColumnControls(state) {
   const columns = state && Array.isArray(state.columns) ? state.columns : [];
@@ -8,16 +73,15 @@ function updateEmailColumnControls(state) {
   const $selector = $("#email-column");
   const $usingColumn = $("#using-email-column");
   const $validateButton = $("#validate-emails-btn");
-  const $status = $("#validation-status");
-  const $summary = $("#validation-summary");
 
   if (!hasData) {
     selectedEmailColumn = null;
+    storeSelectedColumn(null);
     $selectorContainer.addClass("hidden");
     $usingColumn.addClass("hidden").text("");
     $validateButton.prop("disabled", true);
-    $status.empty();
-    $summary.addClass("hidden").empty();
+    setValidationStatus("");
+    renderValidationSummary(null);
     return;
   }
 
@@ -29,29 +93,63 @@ function updateEmailColumnControls(state) {
   });
 
   const emailMatch = columns.find((column) => column.toLowerCase() === "email");
-  if (emailMatch) {
-    selectedEmailColumn = emailMatch;
+  const storedSelection = getStoredSelectedColumn();
+
+  let resolvedColumn = null;
+
+  if (storedSelection && columns.includes(storedSelection)) {
+    resolvedColumn = storedSelection;
+  } else if (selectedEmailColumn && columns.includes(selectedEmailColumn)) {
+    resolvedColumn = selectedEmailColumn;
+  } else if (emailMatch) {
+    resolvedColumn = emailMatch;
+  } else {
+    resolvedColumn = columns[0] || null;
+  }
+
+  selectedEmailColumn = resolvedColumn;
+
+  if (selectedEmailColumn) {
+    storeSelectedColumn(selectedEmailColumn);
+  } else {
+    storeSelectedColumn(null);
+  }
+
+  if (emailMatch && selectedEmailColumn === emailMatch) {
     $selector.val(emailMatch);
     $selectorContainer.addClass("hidden");
     $usingColumn
       .removeClass("hidden")
       .text(`Using column: ${selectedEmailColumn}`);
   } else {
-    selectedEmailColumn = columns[0] || null;
-    $selectorContainer.removeClass("hidden");
-    $usingColumn.addClass("hidden").text("");
     if (selectedEmailColumn) {
       $selector.val(selectedEmailColumn);
     }
+    $selectorContainer.removeClass("hidden");
+    $usingColumn.addClass("hidden").text("");
   }
 
   $validateButton.prop("disabled", !selectedEmailColumn);
-  $status.empty();
+
+  const savedSummary = loadValidationSummary();
+  if (savedSummary) {
+    renderValidationSummary(savedSummary);
+  } else {
+    renderValidationSummary(null);
+  }
+
+  const savedStatus = loadValidationStatus();
+  if (savedStatus) {
+    setValidationStatus(savedStatus);
+  } else {
+    setValidationStatus("");
+  }
 }
 
 function renderValidationSummary(summary) {
   if (!summary) {
     $("#validation-summary").addClass("hidden").empty();
+    saveValidationSummary(null);
     return;
   }
 
@@ -85,6 +183,7 @@ function renderValidationSummary(summary) {
   }
 
   $("#validation-summary").removeClass("hidden").html(html);
+  saveValidationSummary(summary);
 }
 
 $(document).on("validateEmails:dataLoaded", function (_event, state) {
@@ -94,20 +193,23 @@ $(document).on("validateEmails:dataLoaded", function (_event, state) {
 $("#email-column").on("change", function () {
   selectedEmailColumn = $(this).val();
   $("#validate-emails-btn").prop("disabled", !selectedEmailColumn);
+  if (selectedEmailColumn) {
+    storeSelectedColumn(selectedEmailColumn);
+  } else {
+    storeSelectedColumn(null);
+  }
 });
 
 $("#validate-emails-btn").on("click", async function () {
   if (!selectedEmailColumn) {
-    $("#validation-status").text(
-      "Please select the column that contains email addresses."
-    );
+    setValidationStatus("Please select the column that contains email addresses.");
     return;
   }
 
   const state = window.validateEmailsState || {};
   const rows = Array.isArray(state.data) ? state.data : [];
   if (!rows.length) {
-    $("#validation-status").text("No data available for validation.");
+    setValidationStatus("No data available for validation.");
     return;
   }
 
@@ -123,7 +225,7 @@ $("#validate-emails-btn").on("click", async function () {
       : null;
 
   $button.prop("disabled", true).text("Validating…");
-  $("#validation-status").text("Starting validation…");
+  setValidationStatus("Starting validation…");
 
   for (let start = 0; start < totalRows; start += batchSize) {
     const stop = Math.min(start + batchSize, totalRows);
@@ -132,9 +234,7 @@ $("#validate-emails-btn").on("click", async function () {
       setProcessingState(start, stop, true);
     }
 
-    $("#validation-status").text(
-      `Validating rows ${start + 1}-${stop} of ${totalRows}…`
-    );
+    setValidationStatus(`Validating rows ${start + 1}-${stop} of ${totalRows}…`);
 
     try {
       const response = await $.ajax({
@@ -176,9 +276,9 @@ $("#validate-emails-btn").on("click", async function () {
         const statusMessage = completed
           ? "Validation completed."
           : `Validated ${processed} of ${total} email addresses…`;
-        $("#validation-status").text(statusMessage);
+        setValidationStatus(statusMessage);
       } else {
-        $("#validation-status").text(
+        setValidationStatus(
           `Validated rows ${start + 1}-${stop} of ${totalRows}…`
         );
       }
@@ -202,7 +302,7 @@ $("#validate-emails-btn").on("click", async function () {
       if (responseJson && responseJson.error) {
         message = responseJson.error;
       }
-      $("#validation-status").text(message);
+      setValidationStatus(message);
 
       if (responseJson && Array.isArray(responseJson.columns)) {
         updateEmailColumnControls({
@@ -220,8 +320,24 @@ $("#validate-emails-btn").on("click", async function () {
 
   if (!hasError && lastSummary) {
     renderValidationSummary(lastSummary);
-    $("#validation-status").text("Validation completed.");
+    setValidationStatus("Validation completed.");
   }
 
   $button.prop("disabled", !selectedEmailColumn).text("Validate Emails");
+});
+
+$(document).ready(function () {
+  const savedSummary = loadValidationSummary();
+  if (savedSummary) {
+    renderValidationSummary(savedSummary);
+  } else {
+    renderValidationSummary(null);
+  }
+
+  const savedStatus = loadValidationStatus();
+  if (savedStatus) {
+    setValidationStatus(savedStatus);
+  } else {
+    setValidationStatus("");
+  }
 });
